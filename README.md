@@ -2,18 +2,19 @@
 
 Фронтенд и mock-сервер для проведения QA-собеседований.
 
-## Запуск
+## Быстрый старт
 
 ```bash
-# 1. Mock-сервер
-cd mock-server-v2
-npm install
-npm start
+git clone -b develop https://github.com/3y6r/qa-interview-assistant.git
+cd qa-interview-assistant
 
-# 2. Фронтенд (в другом терминале)
+# Терминал 1 — mock-сервер
+cd mock-server-v2
+npm install && npm start
+
+# Терминал 2 — фронтенд
 cd frontend-v2
-npm install
-npm run dev
+npm install && npm run dev
 ```
 
 Фронтенд: http://localhost:3001
