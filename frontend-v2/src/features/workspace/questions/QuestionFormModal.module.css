@@ -1,0 +1,8 @@
+.labelWithIcon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.manageBtn {
+  font-size: 13px;
+}

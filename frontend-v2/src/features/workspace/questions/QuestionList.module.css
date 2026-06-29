@@ -1,0 +1,40 @@
+.card {
+  height: 100%;
+}
+.filtersRow {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow: auto;
+}
+.filterInput {
+  width: 140px;
+  flex-shrink: 0;
+}
+.filterSelect {
+  width: 130px;
+  flex-shrink: 0;
+}
+.filterLevel {
+  width: 110px;
+  flex-shrink: 0;
+}
+.filterTags {
+  min-width: 140px;
+  flex-shrink: 0;
+}
+.createBtn {
+  flex-shrink: 0;
+}
+.emptyState {
+  margin-top: 40px;
+}
+.listItem {
+  cursor: grab;
+  user-select: none;
+}
+.listItemSelected {
+  opacity: 0.5;
+}
+.listItemUnselected {
+  opacity: 1;
+}
