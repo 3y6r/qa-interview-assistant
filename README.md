@@ -1,18 +1,44 @@
 # QA Interview Assistant
 
-Monorepo for the QA interview assistant MVP.
+Репозиторий для проведения QA-собеседований.
 
-## Project Structure
+## Структура
 
-- `backend/` - FastAPI backend for categories, levels, questions, tags, and interview results
-- `frontend-v2/` - frontend application
-- `mock-server-v2/` - mock server for local development
+- `frontend/` - фронтенд приложения
+- `mock-server/` - mock-сервер для локальной разработки
+- `backend/` - FastAPI backend для справочников, тегов и итогов интервью
 
-## Backend Quick Start
+## Требования
 
-See [`backend/README.md`](backend/README.md) for full backend setup and API details.
+- Node.js 20+
+- Python 3.12 для backend
+- Poetry для backend
 
-Minimal backend run:
+## Быстрый старт
+
+### Frontend и mock-сервер
+
+```bash
+git clone -b develop https://github.com/3y6r/qa-interview-assistant.git
+cd qa-interview-assistant
+
+# Терминал 1 - mock-сервер
+cd mock-server-v2
+npm install && npm start
+
+# Терминал 2 - фронтенд
+cd frontend-v2
+npm install && npm run dev
+```
+
+- Фронтенд: http://localhost:3001
+- Mock-сервер: http://localhost:8081
+
+### Backend
+
+Подробная инструкция находится в [`backend/README.md`](backend/README.md).
+
+Краткий запуск:
 
 ```powershell
 cd backend
@@ -26,8 +52,8 @@ Backend Swagger UI:
 http://127.0.0.1:8000/docs
 ```
 
-## Notes
+## Примечания
 
-- The backend stores only the final interview result, not interview progress.
-- SQLite is used by default through `DATABASE_URL=sqlite:///./app.db`.
-- Default levels are seeded on startup.
+- Backend хранит только итог интервью, а не процесс прохождения.
+- SQLite используется по умолчанию через `DATABASE_URL=sqlite:///./app.db`.
+- Уровни создаются автоматически при старте backend.
