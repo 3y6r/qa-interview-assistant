@@ -1,5 +1,5 @@
 {
-  "name": "mock-server-v2",
+  "name": "mock-server",
   "private": true,
   "type": "module",
   "scripts": {
