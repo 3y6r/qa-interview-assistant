@@ -1,0 +1,38 @@
+.card {
+  margin-bottom: 12px;
+}
+.row {
+  display: flex;
+  gap: 16px;
+}
+.avatarIcon {
+  font-size: 40px;
+  color: #1890ff;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+.info {
+  flex: 1;
+  min-width: 0;
+}
+.name {
+  margin: 0;
+}
+.grid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+  align-items: baseline;
+}
+.label {
+  white-space: nowrap;
+}
+.value {
+  word-break: break-word;
+}
+.createButton {
+  margin-bottom: 12px;
+  height: 80px;
+  font-size: 16px;
+}
