@@ -1,23 +1,33 @@
 # QA Interview Assistant
 
-Фронтенд и mock-сервер для проведения QA-собеседований.
+Monorepo for the QA interview assistant MVP.
 
-Требования: **Node.js 20+**.
+## Project Structure
 
-## Быстрый старт
+- `backend/` - FastAPI backend for categories, levels, questions, tags, and interview results
+- `frontend-v2/` - frontend application
+- `mock-server-v2/` - mock server for local development
 
-```bash
-git clone -b develop https://github.com/3y6r/qa-interview-assistant.git
-cd qa-interview-assistant
+## Backend Quick Start
 
-# Терминал 1 — mock-сервер
-cd mock-server-v2
-npm install && npm start
+See [`backend/README.md`](backend/README.md) for full backend setup and API details.
 
-# Терминал 2 — фронтенд
-cd frontend-v2
-npm install && npm run dev
+Minimal backend run:
+
+```powershell
+cd backend
+poetry install
+poetry run uvicorn app.main:app --reload
 ```
 
-Фронтенд: http://localhost:3001
-Mock-сервер: http://localhost:8081
+Backend Swagger UI:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+## Notes
+
+- The backend stores only the final interview result, not interview progress.
+- SQLite is used by default through `DATABASE_URL=sqlite:///./app.db`.
+- Default levels are seeded on startup.
