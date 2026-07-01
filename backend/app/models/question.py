@@ -15,7 +15,7 @@ class Question(Base):
     expected_answer: Mapped[str] = mapped_column(Text, nullable=False)
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"), nullable=False, index=True)
     level_id: Mapped[int] = mapped_column(ForeignKey("levels.id"), nullable=False, index=True)
-    is_archived: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=sa_text("0"))
+    is_archived: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=sa_text("false"))
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
