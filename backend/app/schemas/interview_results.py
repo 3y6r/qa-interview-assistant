@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class InterviewResultCreate(BaseModel):
     candidate_full_name: str = Field(min_length=1, max_length=255)
+    position: str = Field(min_length=1, max_length=255)
     interview_date: date
     average_score: float
     comment: str = Field(min_length=1)
@@ -15,6 +16,7 @@ class InterviewResultRead(BaseModel):
 
     id: int
     candidate_full_name: str
+    position: str
     interview_date: date
     average_score: float
     comment: str

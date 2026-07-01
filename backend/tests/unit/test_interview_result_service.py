@@ -15,6 +15,7 @@ def make_result():
     return InterviewResult(
         id=1,
         candidate_full_name="Ivan Ivanov",
+        position="Backend Developer",
         interview_date=date(2026, 1, 1),
         average_score=7.5,
         comment="Good candidate",
@@ -30,6 +31,7 @@ def test_create_result_trims_and_creates(monkeypatch):
     result = service.create_result(
         SimpleNamespace(
             candidate_full_name="  Ivan Ivanov  ",
+            position="  Backend Developer  ",
             interview_date=date(2026, 1, 1),
             average_score=7.5,
             comment="  Good candidate  ",
@@ -37,6 +39,7 @@ def test_create_result_trims_and_creates(monkeypatch):
     )
 
     assert result.candidate_full_name == "Ivan Ivanov"
+    assert result.position == "Backend Developer"
     assert result.comment == "Good candidate"
     assert len(repo.created) == 1
 
@@ -51,6 +54,18 @@ def test_create_result_rejects_empty_fields(monkeypatch):
         service.create_result(
             SimpleNamespace(
                 candidate_full_name="   ",
+                position="Backend Developer",
+                interview_date=date(2026, 1, 1),
+                average_score=7.5,
+                comment="Good candidate",
+            )
+        )
+
+    with pytest.raises(ValidationError, match="Position cannot be empty"):
+        service.create_result(
+            SimpleNamespace(
+                candidate_full_name="Ivan Ivanov",
+                position="   ",
                 interview_date=date(2026, 1, 1),
                 average_score=7.5,
                 comment="Good candidate",
@@ -61,6 +76,7 @@ def test_create_result_rejects_empty_fields(monkeypatch):
         service.create_result(
             SimpleNamespace(
                 candidate_full_name="Ivan Ivanov",
+                position="Backend Developer",
                 interview_date=date(2026, 1, 1),
                 average_score=7.5,
                 comment="   ",

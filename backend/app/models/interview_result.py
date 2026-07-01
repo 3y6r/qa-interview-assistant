@@ -11,6 +11,7 @@ class InterviewResult(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     candidate_full_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    position: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     interview_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     average_score: Mapped[float] = mapped_column(Float, nullable=False)
     comment: Mapped[str] = mapped_column(Text, nullable=False)

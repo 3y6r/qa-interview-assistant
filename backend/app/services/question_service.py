@@ -14,7 +14,17 @@ class QuestionService:
         self.category_repo = CategoryRepository(db)
         self.level_repo = LevelRepository(db)
 
-    def list_questions(self, *, text=None, category_id=None, level_id=None, is_archived=None, tag_ids=None):
+    def list_questions(
+        self,
+        *,
+        text=None,
+        category_id=None,
+        level_id=None,
+        is_archived=None,
+        tag_ids=None,
+        limit=None,
+        offset=None,
+    ):
         kwargs = dict(
             text=text,
             category_id=category_id,
@@ -23,6 +33,10 @@ class QuestionService:
         )
         if tag_ids is not None:
             kwargs["tag_ids"] = tag_ids
+        if limit is not None:
+            kwargs["limit"] = limit
+        if offset is not None:
+            kwargs["offset"] = offset
         return self.repo.list(**kwargs)
 
     def get_question(self, question_id: int) -> Question:

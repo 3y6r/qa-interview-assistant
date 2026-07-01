@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from fastapi import Query
 from sqlalchemy.orm import Session
 
 from app.exceptions.base import ValidationError
@@ -28,6 +29,8 @@ def list_questions(
     level_id: int | None = None,
     is_archived: bool | None = None,
     tag_ids: str | None = None,
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ):
     return QuestionService(db).list_questions(
@@ -36,6 +39,8 @@ def list_questions(
         level_id=level_id,
         is_archived=is_archived,
         tag_ids=_parse_tag_ids(tag_ids),
+        limit=limit,
+        offset=offset,
     )
 
 
