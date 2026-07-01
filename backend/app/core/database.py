@@ -43,17 +43,29 @@ def sync_schema() -> None:
     if not inspector.has_table("tags"):
         return
 
-    columns = {column["name"] for column in inspector.get_columns("tags")}
-    if "is_archived" in columns:
+    migrations = []
+
+    tag_columns = {column["name"] for column in inspector.get_columns("tags")}
+    if "is_archived" not in tag_columns:
+        if engine.dialect.name == "sqlite":
+            migrations.append("ALTER TABLE tags ADD COLUMN is_archived BOOLEAN NOT NULL DEFAULT 0")
+        else:
+            migrations.append("ALTER TABLE tags ADD COLUMN is_archived BOOLEAN NOT NULL DEFAULT false")
+
+    if inspector.has_table("interview_results"):
+        result_columns = {column["name"] for column in inspector.get_columns("interview_results")}
+        if "position" not in result_columns:
+            if engine.dialect.name == "sqlite":
+                migrations.append("ALTER TABLE interview_results ADD COLUMN position VARCHAR(255) NOT NULL DEFAULT ''")
+            else:
+                migrations.append("ALTER TABLE interview_results ADD COLUMN position VARCHAR(255) NOT NULL DEFAULT ''")
+
+    if not migrations:
         return
 
-    if engine.dialect.name == "sqlite":
-        statement = "ALTER TABLE tags ADD COLUMN is_archived BOOLEAN NOT NULL DEFAULT 0"
-    else:
-        statement = "ALTER TABLE tags ADD COLUMN is_archived BOOLEAN NOT NULL DEFAULT false"
-
     with engine.begin() as conn:
-        conn.execute(text(statement))
+        for statement in migrations:
+            conn.execute(text(statement))
 
 
 def init_db() -> None:

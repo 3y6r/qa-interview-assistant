@@ -79,7 +79,9 @@ On startup the app creates default levels:
 ## Notes
 
 - The backend stores only the final interview result, not the interview process.
+- `POST /api/interview-results` requires `candidate_full_name`, `position`, `interview_date`, `average_score`, and `comment`.
 - Questions support many-to-many tags and can be filtered with `tag_ids=1,2`.
+- `GET /api/questions` and `GET /api/interview-results` support `limit` and `offset` for pagination. Default `limit` is 20, maximum is 100.
 - `PUT /api/tags/{id}` can update `name`, `color`, and `is_archived`.
 - `PUT /api/questions/{id}` replaces tags only when `tag_ids` is provided.
 - All errors are returned in the format:

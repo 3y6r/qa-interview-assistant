@@ -21,6 +21,8 @@ class QuestionRepository:
         level_id: int | None = None,
         is_archived: bool | None = None,
         tag_ids: list[int] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> list[Question]:
         query = select(Question).order_by(Question.id)
         if text:
@@ -40,6 +42,10 @@ class QuestionRepository:
                 .having(func.count(func.distinct(question_tags.c.tag_id)) == len(unique_ids))
             )
             query = query.where(Question.id.in_(tag_match_ids))
+        if offset is not None:
+            query = query.offset(offset)
+        if limit is not None:
+            query = query.limit(limit)
         return list(self.db.scalars(query).all())
 
     def get(self, question_id: int) -> Question | None:

@@ -14,6 +14,8 @@ class InterviewResultRepository:
         candidate_full_name: str | None = None,
         date_from=None,
         date_to=None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> list[InterviewResult]:
         query = select(InterviewResult).order_by(InterviewResult.id)
         if candidate_full_name:
@@ -22,6 +24,10 @@ class InterviewResultRepository:
             query = query.where(InterviewResult.interview_date >= date_from)
         if date_to is not None:
             query = query.where(InterviewResult.interview_date <= date_to)
+        if offset is not None:
+            query = query.offset(offset)
+        if limit is not None:
+            query = query.limit(limit)
         return list(self.db.scalars(query).all())
 
     def get(self, result_id: int) -> InterviewResult | None:

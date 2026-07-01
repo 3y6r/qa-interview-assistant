@@ -1,6 +1,7 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends
+from fastapi import Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -15,12 +16,16 @@ def list_interview_results(
     candidate_full_name: str | None = None,
     date_from: date | None = None,
     date_to: date | None = None,
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ):
     return InterviewResultService(db).list_results(
         candidate_full_name=candidate_full_name,
         date_from=date_from,
         date_to=date_to,
+        limit=limit,
+        offset=offset,
     )
 
 
