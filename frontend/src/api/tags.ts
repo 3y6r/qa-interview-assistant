@@ -11,5 +11,5 @@ export const tagsApi = {
     client.put<Tag>(`/tags/${id}`, data).then((r) => r.data),
 
   delete: (id: number) =>
-    client.delete(`/tags/${id}`).then((r) => r.data),
+    client.patch<Tag>(`/tags/${id}/archive`).then((r) => r.data),
 };

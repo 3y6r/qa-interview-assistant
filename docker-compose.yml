@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-qa_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-qa_password}
     ports:
-      - "5432:5432"
+      - "15432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -41,7 +41,7 @@ services:
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000/api}
     ports:
-      - "5173:5173"
+      - "3001:3001"
     depends_on:
       - backend
 

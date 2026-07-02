@@ -1,19 +1,31 @@
 import client from './client';
-import type { Question, PaginatedResponse, CreateQuestionRequest, UpdateQuestionRequest, GenerateQuestionsRequest } from '../types';
+import type { Question, CreateQuestionRequest, UpdateQuestionRequest, GenerateQuestionsRequest } from '../types';
 
 export interface QuestionFilters {
   categoryId?: number;
-  level?: string;
+  levelId?: number;
   text?: string;
   tagIds?: number[];
-  product?: string;
-  page?: number;
-  size?: number;
+  isArchived?: boolean;
 }
+
+const toBackendParams = (filters?: QuestionFilters) => {
+  if (!filters) return undefined;
+
+  const params: Record<string, string | number | boolean> = {};
+
+  if (filters.text) params.text = filters.text;
+  if (filters.categoryId) params.category_id = filters.categoryId;
+  if (filters.levelId) params.level_id = filters.levelId;
+  if (typeof filters.isArchived === 'boolean') params.is_archived = filters.isArchived;
+  if (filters.tagIds?.length) params.tag_ids = filters.tagIds.join(',');
+
+  return params;
+};
 
 export const questionsApi = {
   list: (filters?: QuestionFilters) =>
-    client.get<PaginatedResponse<Question>>('/questions', { params: filters }).then((r) => r.data),
+    client.get<Question[]>('/questions', { params: toBackendParams(filters) }).then((r) => r.data),
 
   getById: (id: number) =>
     client.get<Question>(`/questions/${id}`).then((r) => r.data),
@@ -27,18 +39,9 @@ export const questionsApi = {
   archive: (id: number) =>
     client.patch(`/questions/${id}/archive`).then((r) => r.data),
 
-  restore: (id: number) =>
-    client.patch(`/questions/${id}/restore`).then((r) => r.data),
-
   delete: (id: number) =>
     client.delete(`/questions/${id}`).then((r) => r.data),
 
   generate: (data: GenerateQuestionsRequest) =>
-    client.post<Question[]>('/questions/generate', data).then((r) => r.data),
-
-  saveGenerated: (questions: CreateQuestionRequest[]) =>
-    client.post<Question[]>('/questions/generate/save', questions).then((r) => r.data),
-
-  getExpectedAnswer: (id: number) =>
-    client.get<{ expectedAnswer: string }>(`/questions/${id}/answer`).then((r) => r.data),
+    client.post<Question[]>('/ai/questions/generate', data).then((r) => r.data),
 };

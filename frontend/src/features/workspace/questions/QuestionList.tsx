@@ -5,9 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { questionsApi } from '../../../api/questions';
 import { categoriesApi } from '../../../api/categories';
 import { tagsApi } from '../../../api/tags';
-import { productsApi } from '../../../api/products';
+import { levelsApi } from '../../../api/levels';
 import { useEditorStore } from '../../../stores/editorStore';
-import { QUESTION_LEVELS } from '../../../utils/constants';
 import { QuestionFormModal } from './QuestionFormModal';
 import type { Question } from '../../../types';
 import styles from './QuestionList.module.css';
@@ -17,22 +16,20 @@ export function QuestionList() {
   const { addQuestion, selectedQuestions } = useEditorStore();
   const [text, setText] = useState('');
   const [categoryId, setCategoryId] = useState<number | undefined>();
-  const [level, setLevel] = useState<string | undefined>();
-  const [product, setProduct] = useState<string | undefined>();
+  const [levelId, setLevelId] = useState<number | undefined>();
   const [tagIds, setTagIds] = useState<number[] | undefined>();
   const [formModal, setFormModal] = useState<{ open: boolean; question: Question | null }>({ open: false, question: null });
 
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list });
   const { data: allTags = [] } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.list });
-  const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: productsApi.list });
+  const { data: levels = [] } = useQuery({ queryKey: ['levels'], queryFn: levelsApi.list });
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['questions', text, categoryId, level, product, tagIds],
-    queryFn: () => questionsApi.list({ text: text || undefined, categoryId, level, product: product || undefined, tagIds, size: 50 }),
+  const { data: questions = [], isLoading } = useQuery({
+    queryKey: ['questions', text, categoryId, levelId, tagIds],
+    queryFn: () => questionsApi.list({ text: text || undefined, categoryId, levelId, tagIds, isArchived: false }),
   });
 
-  const questions = data?.items || [];
-  const selectedIds = new Set(selectedQuestions.map(q => q.id));
+  const selectedIds = new Set(selectedQuestions.map((q) => q.id));
 
   const createMutation = useMutation({
     mutationFn: (values: any) => questionsApi.create(values),
@@ -83,6 +80,9 @@ export function QuestionList() {
     }
   };
 
+  const getCategoryName = (id: number) => categories.find((c) => c.id === id)?.name || 'Без категории';
+  const getLevelName = (id: number) => levels.find((l) => l.id === id)?.name || 'Без уровня';
+
   return (
     <>
       <Card title="Список вопросов" className={styles.card} styles={{ body: { overflow: 'auto', height: 'calc(100% - 56px)' } }}>
@@ -102,23 +102,15 @@ export function QuestionList() {
               onChange={setCategoryId}
               allowClear
               className={styles.filterSelect}
-              options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
+              options={categories.map((c) => ({ value: c.id, label: c.name }))}
             />
             <Select
               placeholder="Уровень"
-              value={level}
-              onChange={setLevel}
+              value={levelId}
+              onChange={setLevelId}
               allowClear
               className={styles.filterLevel}
-              options={QUESTION_LEVELS.map(l => ({ value: l.value, label: l.label }))}
-            />
-            <Select
-              placeholder="Продукт"
-              value={product}
-              onChange={setProduct}
-              allowClear
-              className={styles.filterSelect}
-              options={products.map((p: any) => ({ value: p.name, label: p.name }))}
+              options={levels.map((l) => ({ value: l.id, label: l.name }))}
             />
             <Select
               mode="multiple"
@@ -127,7 +119,7 @@ export function QuestionList() {
               onChange={setTagIds}
               allowClear
               className={styles.filterTags}
-              options={allTags.map((t: any) => ({ value: t.id, label: t.name }))}
+              options={allTags.map((t) => ({ value: t.id, label: t.name }))}
             />
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setFormModal({ open: true, question: null })} className={styles.createBtn}>
               Создать
@@ -167,17 +159,16 @@ export function QuestionList() {
                     ]}
                   >
                     <List.Item.Meta
-                      title={
-                        <Space>
-                          <span>{q.text}</span>
-                        </Space>
-                      }
+                      title={<span>{q.text}</span>}
                       description={
                         <Space size={4} wrap>
-                          <Tag>{q.category.name}</Tag>
-                          {q.level && <Tag color="blue">{QUESTION_LEVELS.find(l => l.value === q.level)?.label}</Tag>}
-                          {q.product && <Tag color="purple">{q.product}</Tag>}
-                          {q.tags.map(t => <Tag key={t.id} color={t.color || '#108ee9'}>{t.name}</Tag>)}
+                          <Tag>{getCategoryName(q.category_id)}</Tag>
+                          <Tag color="blue">{getLevelName(q.level_id)}</Tag>
+                          {q.tags?.map((t) => (
+                            <Tag key={t.id} color={t.color || '#108ee9'}>
+                              {t.name}
+                            </Tag>
+                          ))}
                         </Space>
                       }
                     />

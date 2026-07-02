@@ -1,12 +1,14 @@
 import { useState, useCallback } from 'react';
 import { Button, Empty, Tag, Card, Rate, Modal, Input } from 'antd';
 import { CloseOutlined, MenuOutlined, CommentOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
+import { categoriesApi } from '../../../api/categories';
+import { levelsApi } from '../../../api/levels';
 import { useEditorStore } from '../../../stores/editorStore';
-import { QUESTION_LEVELS } from '../../../utils/constants';
-import type { Question } from '../../../types';
+import type { Category, Level, Question } from '../../../types';
 import styles from './SelectedQuestionsPanel.module.css';
 
-function QuestionCard({ q, index }: { q: Question; index: number }) {
+function QuestionCard({ q, index, categories, levels }: { q: Question; index: number; categories: Category[]; levels: Level[] }) {
   const { removeQuestion, reorderQuestions, selectedQuestions, scores, setScore, setComment } = useEditorStore();
   const qs = scores[q.id];
   const [showAnswer, setShowAnswer] = useState(false);
@@ -17,6 +19,9 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
     setComment(q.id, commentText);
     setCommentOpen(false);
   };
+
+  const categoryName = categories.find((c) => c.id === q.category_id)?.name || 'Без категории';
+  const levelName = levels.find((l) => l.id === q.level_id)?.name || 'Без уровня';
 
   return (
     <div className={styles.questionCard}>
@@ -34,9 +39,9 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
             </span>
           </div>
           <div className={styles.tagsRow}>
-            <Tag className={styles.tag}>{q.category.name}</Tag>
-            {q.level && <Tag color="blue" className={styles.tag}>{QUESTION_LEVELS.find(l => l.value === q.level)?.label}</Tag>}
-            {q.tags.map(t => <Tag key={t.id} color={t.color || '#108ee9'} className={styles.tag}>{t.name}</Tag>)}
+            <Tag className={styles.tag}>{categoryName}</Tag>
+            <Tag color="blue" className={styles.tag}>{levelName}</Tag>
+            {q.tags?.map((t) => <Tag key={t.id} color={t.color || '#108ee9'} className={styles.tag}>{t.name}</Tag>)}
           </div>
           <div className={styles.ratingRow}>
             <div className={styles.rating}>
@@ -54,7 +59,7 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
           </div>
           {showAnswer && (
             <div className={styles.answerBox}>
-              {q.expectedAnswer}
+              {q.expected_answer}
             </div>
           )}
         </div>
@@ -69,6 +74,8 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
 export function SelectedQuestionsPanel() {
   const { selectedQuestions, addQuestion } = useEditorStore();
   const [dragOver, setDragOver] = useState(false);
+  const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list });
+  const { data: levels = [] } = useQuery({ queryKey: ['levels'], queryFn: levelsApi.list });
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -117,7 +124,7 @@ export function SelectedQuestionsPanel() {
         {isEmpty ? (
           <Empty description="Перетащите вопросы сюда или добавьте кнопкой" />
         ) : (
-          selectedQuestions.map((q, i) => <QuestionCard key={q.id} q={q} index={i} />)
+          selectedQuestions.map((q, i) => <QuestionCard key={q.id} q={q} index={i} categories={categories} levels={levels} />)
         )}
       </div>
     </Card>

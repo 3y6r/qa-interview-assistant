@@ -324,8 +324,7 @@ app.get('/api/questions/:id/answer', (req, res) => {
 // ----- Interviews -----
 
 app.post('/api/interviews', authMiddleware, (req, res) => {
-  const { candidateName, position, level, topicIds = [], questionIds = [] } = req.body;
-  const selectedTopics = categories.filter(c => topicIds.includes(c.id));
+  const { candidateName, position, level, questionIds = [] } = req.body;
   const selectedQuestions = questions.filter(q => questionIds.includes(q.id));
 
   const interview = {
