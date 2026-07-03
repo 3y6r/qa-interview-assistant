@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Card, Input, Select, Space, Button, List, Tag, Empty, message, Popconfirm, Tooltip } from 'antd';
 import { PlusOutlined, SearchOutlined, EditOutlined, InboxOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { questionsApi } from '../../../api/questions';
 import { categoriesApi } from '../../../api/categories';
 import { tagsApi } from '../../../api/tags';
@@ -27,10 +27,25 @@ export function QuestionList() {
 
   const levelMap = new Map(levels.map((l: any) => [l.id, l.name]));
 
-  const { data: questions = [], isLoading } = useQuery({
+  const LIMIT = 20;
+
+  const {
+    data: questionsPages,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
     queryKey: ['questions', text, categoryId, levelId, tagIds],
-    queryFn: () => questionsApi.list({ text: text || undefined, categoryId, levelId, tagIds, isArchived: false, limit: 100 }),
+    queryFn: ({ pageParam = 0 }) =>
+      questionsApi.list({ text: text || undefined, categoryId, levelId, tagIds, isArchived: false, limit: LIMIT, offset: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.length < LIMIT ? undefined : allPages.length * LIMIT;
+    },
   });
+
+  const questions = questionsPages?.pages.flat() ?? [];
 
   const selectedIds = new Set(selectedQuestions.map(q => q.id));
 
@@ -147,46 +162,46 @@ export function QuestionList() {
 
   return (
     <>
-      <Card title="Список вопросов" className={styles.card} styles={{ body: { overflow: 'auto', height: 'calc(100% - 56px)' } }}>
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Space className={styles.filtersRow}>
-            <Input
-              placeholder="Поиск"
-              prefix={<SearchOutlined />}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className={styles.filterInput}
-              allowClear
-            />
-            <Select
-              placeholder="Категория"
-              value={categoryId}
-              onChange={setCategoryId}
-              allowClear
-              className={styles.filterSelect}
-              options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
-            />
-            <Select
-              placeholder="Уровень"
-              value={levelId}
-              onChange={setLevelId}
-              allowClear
-              className={styles.filterLevel}
-              options={levels.map((l: any) => ({ value: l.id, label: l.name }))}
-            />
-            <Select
-              mode="multiple"
-              placeholder="Теги"
-              value={tagIds}
-              onChange={setTagIds}
-              allowClear
-              className={styles.filterTags}
-              options={allTags.map((t: any) => ({ value: t.id, label: t.name }))}
-            />
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setFormModal({ open: true, question: null })} className={styles.createBtn}>
-              Создать
-            </Button>
-          </Space>
+      <Card title="Список вопросов" className={styles.card} styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column', height: 'calc(100% - 56px)' } }}>
+        <div className={styles.filtersRow}>
+          <Input
+            placeholder="Поиск"
+            prefix={<SearchOutlined />}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className={styles.filterInput}
+            allowClear
+          />
+          <Select
+            placeholder="Категория"
+            value={categoryId}
+            onChange={setCategoryId}
+            allowClear
+            className={styles.filterSelect}
+            options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
+          />
+          <Select
+            placeholder="Уровень"
+            value={levelId}
+            onChange={setLevelId}
+            allowClear
+            className={styles.filterLevel}
+            options={levels.map((l: any) => ({ value: l.id, label: l.name }))}
+          />
+          <Select
+            mode="multiple"
+            placeholder="Теги"
+            value={tagIds}
+            onChange={setTagIds}
+            allowClear
+            className={styles.filterTags}
+            options={allTags.map((t: any) => ({ value: t.id, label: t.name }))}
+          />
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setFormModal({ open: true, question: null })} className={styles.createBtn}>
+            Создать
+          </Button>
+        </div>
+        <div className={styles.listWrapper}>
           {questions.length === 0 && !isLoading ? (
             <Empty description="Нет вопросов" className={styles.emptyState} />
           ) : (
@@ -202,6 +217,7 @@ export function QuestionList() {
                     key={q.id}
                     draggable
                     onDragStart={(e) => handleDragStart(e, q)}
+                    style={{ paddingLeft: 16 }}
                     className={`${styles.listItem} ${isSelected ? styles.listItemSelected : styles.listItemUnselected}`}
                     actions={[
                       <Tooltip key="add" title="Добавить к собеседованию">
@@ -241,7 +257,14 @@ export function QuestionList() {
               }}
             />
           )}
-        </Space>
+          {hasNextPage && (
+            <div style={{ textAlign: 'center', padding: '8px 0' }}>
+              <Button loading={isFetchingNextPage} onClick={() => fetchNextPage()}>
+                Загрузить еще
+              </Button>
+            </div>
+          )}
+        </div>
       </Card>
       <QuestionFormModal
         open={formModal.open}

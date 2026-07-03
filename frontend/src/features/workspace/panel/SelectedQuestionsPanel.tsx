@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Button, Empty, Tag, Card, Rate } from 'antd';
 import { CloseOutlined, MenuOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import { useEditorStore } from '../../../stores/editorStore';
@@ -24,7 +24,7 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
     <div className={styles.questionCard}>
       <div className={styles.questionRow}>
         <MenuOutlined className={styles.dragHandle} />
-        <div className={styles.questionContent}>
+        <div className={styles.questionContent} style={{ paddingLeft: 12 }}>
           <div className={styles.questionHeader}>
             <span className={styles.questionText}>
               {index + 1}. {q.text}
@@ -65,19 +65,26 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
 export function SelectedQuestionsPanel() {
   const { selectedQuestions, addQuestion } = useEditorStore();
   const [dragOver, setDragOver] = useState(false);
+  const dragCounter = useRef(0);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
+  }, []);
+
+  const handleDragEnter = useCallback(() => {
+    dragCounter.current += 1;
     setDragOver(true);
   }, []);
 
   const handleDragLeave = useCallback(() => {
-    setDragOver(false);
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) setDragOver(false);
   }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    dragCounter.current = 0;
     setDragOver(false);
     try {
       const json = e.dataTransfer.getData('application/json');
@@ -94,7 +101,11 @@ export function SelectedQuestionsPanel() {
     <Card
       size="small"
       title={`Выбранные вопросы (${selectedQuestions.length})`}
-      className={styles.card}
+      className={`${styles.card} ${dragOver ? styles.cardDragOver : ''}`}
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       styles={{
         body: {
           flex: 1,
@@ -104,18 +115,11 @@ export function SelectedQuestionsPanel() {
         },
       }}
     >
-      <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`${styles.dropZone} ${dragOver ? styles.dropZoneOver : styles.dropZoneDefault}`}
-      >
-        {isEmpty ? (
-          <Empty description="Перетащите вопросы сюда или добавьте кнопкой" />
-        ) : (
-          selectedQuestions.map((q, i) => <QuestionCard key={q.id} q={q} index={i} />)
-        )}
-      </div>
+      {isEmpty ? (
+        <Empty description="Перетащите вопросы сюда или добавьте кнопкой" />
+      ) : (
+        selectedQuestions.map((q, i) => <QuestionCard key={q.id} q={q} index={i} />)
+      )}
     </Card>
   );
 }

@@ -74,18 +74,7 @@
   border: 1px solid #b7eb8f;
   font-size: 13px;
 }
-.dropZone {
-  min-height: 120px;
-  border-radius: 8px;
-  padding: 8px;
-  flex: 1;
-  transition: all 0.2s;
-}
-.dropZoneDefault {
-  border: 2px dashed #d9d9d9;
-  background: transparent;
-}
-.dropZoneOver {
-  border: 2px dashed #1890ff;
-  background: #e6f7ff;
+.cardDragOver {
+  border-color: #1890ff !important;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
 }
