@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { Button, Empty, Tag, Card, Rate } from 'antd';
-import { CloseOutlined, MenuOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { CloseOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import { useEditorStore } from '../../../stores/editorStore';
 import { LEVELS_QUERY_KEY } from '../../../utils/constants';
 import { useQuery } from '@tanstack/react-query';
@@ -23,7 +23,6 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
   return (
     <div className={styles.questionCard}>
       <div className={styles.questionRow}>
-        <MenuOutlined className={styles.dragHandle} />
         <div className={styles.questionContent} style={{ paddingLeft: 12 }}>
           <div className={styles.questionHeader}>
             <span className={styles.questionText}>

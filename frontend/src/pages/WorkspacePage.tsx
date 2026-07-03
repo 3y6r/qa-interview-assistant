@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Modal, Statistic, Row, Col, Tag, Descriptions, Table, Input, message } from 'antd';
 import { CalculatorOutlined, RotateLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import { useMutation } from '@tanstack/react-query';
@@ -11,7 +11,19 @@ import dayjs from 'dayjs';
 import styles from './WorkspacePage.module.css';
 
 export function WorkspacePage() {
-  const { candidate, selectedQuestions, scores, reset } = useEditorStore();
+  const { sessionToken, candidate, selectedQuestions, scores, reset, restoreSession } = useEditorStore();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get('s');
+    if (token) {
+      restoreSession(token);
+    } else {
+      const newToken = useEditorStore.getState().sessionToken;
+      const url = `${location.pathname}?s=${newToken}${location.hash}`;
+      window.history.replaceState(null, '', url);
+    }
+  }, []);
   const canStart = !!candidate && selectedQuestions.length > 0;
   const [resultOpen, setResultOpen] = useState(false);
   const [generalComment, setGeneralComment] = useState('');

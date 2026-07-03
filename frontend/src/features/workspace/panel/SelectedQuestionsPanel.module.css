@@ -16,11 +16,6 @@
   align-items: flex-start;
   gap: 8px;
 }
-.dragHandle {
-  cursor: grab;
-  color: #999;
-  margin-top: 3px;
-}
 .questionContent {
   flex: 1;
   min-width: 0;
