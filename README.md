@@ -27,7 +27,7 @@ cd mock-server-v2
 npm install && npm start
 
 # Терминал 2 - фронтенд
-cd frontend-v2
+cd frontend
 npm install && npm run dev
 ```
 
