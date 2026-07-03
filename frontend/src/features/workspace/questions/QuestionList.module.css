@@ -5,6 +5,14 @@
   display: flex;
   flex-wrap: nowrap;
   overflow: auto;
+  padding: 8px;
+  flex-shrink: 0;
+  gap: 8px;
+}
+.listWrapper {
+  overflow: auto;
+  flex: 1;
+  padding: 0 8px 8px;
 }
 .filterInput {
   width: 140px;
@@ -31,6 +39,8 @@
 .listItem {
   cursor: grab;
   user-select: none;
+  border-radius: 20px;
+  padding-left: 16px;
 }
 .listItemSelected {
   opacity: 0.5;

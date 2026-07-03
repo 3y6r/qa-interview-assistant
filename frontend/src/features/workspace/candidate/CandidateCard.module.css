@@ -18,6 +18,11 @@
 .name {
   margin: 0;
 }
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 .grid {
   margin-top: 8px;
   display: grid;

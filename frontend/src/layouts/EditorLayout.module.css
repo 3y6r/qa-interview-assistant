@@ -7,7 +7,7 @@
   align-items: center;
   gap: 24px;
 }
-.logo {
+.logo.logo {
   color: #fff;
   margin: 0;
   white-space: nowrap;

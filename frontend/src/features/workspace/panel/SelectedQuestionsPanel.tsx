@@ -1,28 +1,29 @@
-import { useState, useCallback } from 'react';
-import { Button, Empty, Tag, Card, Rate, Modal, Input } from 'antd';
-import { CloseOutlined, MenuOutlined, CommentOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { useState, useCallback, useRef } from 'react';
+import { Button, Empty, Tag, Card, Rate } from 'antd';
+import { CloseOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import { useEditorStore } from '../../../stores/editorStore';
-import { QUESTION_LEVELS } from '../../../utils/constants';
+import { LEVELS_QUERY_KEY } from '../../../utils/constants';
+import { useQuery } from '@tanstack/react-query';
+import { levelsApi } from '../../../api/levels';
+import { categoriesApi } from '../../../api/categories';
 import type { Question } from '../../../types';
 import styles from './SelectedQuestionsPanel.module.css';
 
 function QuestionCard({ q, index }: { q: Question; index: number }) {
-  const { removeQuestion, reorderQuestions, selectedQuestions, scores, setScore, setComment } = useEditorStore();
+  const { removeQuestion, reorderQuestions, selectedQuestions, scores, setScore } = useEditorStore();
   const qs = scores[q.id];
   const [showAnswer, setShowAnswer] = useState(false);
-  const [commentOpen, setCommentOpen] = useState(false);
-  const [commentText, setCommentText] = useState(qs?.comment || '');
 
-  const saveComment = () => {
-    setComment(q.id, commentText);
-    setCommentOpen(false);
-  };
+  const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list });
+  const { data: levels = [] } = useQuery({ queryKey: [LEVELS_QUERY_KEY], queryFn: levelsApi.list });
+
+  const cat = categories.find((c: any) => c.id === q.categoryId);
+  const levelName = q.levelId ? levels.find((l: any) => l.id === q.levelId)?.name : null;
 
   return (
     <div className={styles.questionCard}>
       <div className={styles.questionRow}>
-        <MenuOutlined className={styles.dragHandle} />
-        <div className={styles.questionContent}>
+        <div className={styles.questionContent} style={{ paddingLeft: 12 }}>
           <div className={styles.questionHeader}>
             <span className={styles.questionText}>
               {index + 1}. {q.text}
@@ -34,8 +35,8 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
             </span>
           </div>
           <div className={styles.tagsRow}>
-            <Tag className={styles.tag}>{q.category.name}</Tag>
-            {q.level && <Tag color="blue" className={styles.tag}>{QUESTION_LEVELS.find(l => l.value === q.level)?.label}</Tag>}
+            {cat && <Tag className={styles.tag}>{cat.name}</Tag>}
+            {levelName && <Tag color="blue" className={styles.tag}>{levelName}</Tag>}
             {q.tags.map(t => <Tag key={t.id} color={t.color || '#108ee9'} className={styles.tag}>{t.name}</Tag>)}
           </div>
           <div className={styles.ratingRow}>
@@ -47,9 +48,6 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
               <Button type="link" size="small" icon={showAnswer ? <EyeInvisibleOutlined /> : <EyeOutlined />} onClick={() => setShowAnswer(!showAnswer)}>
                 {showAnswer ? 'Скрыть' : 'Ответ'}
               </Button>
-              <Button type="link" size="small" icon={<CommentOutlined />} onClick={() => { setCommentText(qs?.comment || ''); setCommentOpen(true); }}>
-                Комментарий
-              </Button>
             </div>
           </div>
           {showAnswer && (
@@ -59,9 +57,6 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
           )}
         </div>
       </div>
-      <Modal title="Комментарий" open={commentOpen} onCancel={() => setCommentOpen(false)} onOk={saveComment}>
-        <Input.TextArea rows={4} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Введите комментарий..." />
-      </Modal>
     </div>
   );
 }
@@ -69,19 +64,26 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
 export function SelectedQuestionsPanel() {
   const { selectedQuestions, addQuestion } = useEditorStore();
   const [dragOver, setDragOver] = useState(false);
+  const dragCounter = useRef(0);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
+  }, []);
+
+  const handleDragEnter = useCallback(() => {
+    dragCounter.current += 1;
     setDragOver(true);
   }, []);
 
   const handleDragLeave = useCallback(() => {
-    setDragOver(false);
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) setDragOver(false);
   }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    dragCounter.current = 0;
     setDragOver(false);
     try {
       const json = e.dataTransfer.getData('application/json');
@@ -98,7 +100,11 @@ export function SelectedQuestionsPanel() {
     <Card
       size="small"
       title={`Выбранные вопросы (${selectedQuestions.length})`}
-      className={styles.card}
+      className={`${styles.card} ${dragOver ? styles.cardDragOver : ''}`}
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       styles={{
         body: {
           flex: 1,
@@ -108,18 +114,11 @@ export function SelectedQuestionsPanel() {
         },
       }}
     >
-      <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`${styles.dropZone} ${dragOver ? styles.dropZoneOver : styles.dropZoneDefault}`}
-      >
-        {isEmpty ? (
-          <Empty description="Перетащите вопросы сюда или добавьте кнопкой" />
-        ) : (
-          selectedQuestions.map((q, i) => <QuestionCard key={q.id} q={q} index={i} />)
-        )}
-      </div>
+      {isEmpty ? (
+        <Empty description="Перетащите вопросы сюда или добавьте кнопкой" />
+      ) : (
+        selectedQuestions.map((q, i) => <QuestionCard key={q.id} q={q} index={i} />)
+      )}
     </Card>
   );
 }
