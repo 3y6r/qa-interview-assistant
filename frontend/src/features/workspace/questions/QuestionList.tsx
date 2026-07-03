@@ -75,22 +75,63 @@ export function QuestionList() {
     e.dataTransfer.effectAllowed = 'copy';
     const el = e.currentTarget as HTMLElement;
     const rect = el.getBoundingClientRect();
-    const ghost = el.cloneNode(true) as HTMLElement;
-    const ul = ghost.querySelector('ul');
-    if (ul) ul.remove();
+    const ghost = document.createElement('div');
     ghost.style.cssText = `
-      position: absolute;
-      top: -10000px;
-      left: -10000px;
-      pointer-events: none;
-      width: ${rect.width}px;
+      padding: 8px 12px;
       background: #fafafa;
       border: 1px solid #f0f0f0;
       border-radius: 8px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-      overflow: hidden;
-      padding: 8px 12px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      width: ${rect.width}px;
+      position: absolute;
+      top: -10000px;
+      left: -10000px;
+      pointer-events: none;
     `;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;';
+    const dragHandle = document.createElement('span');
+    dragHandle.textContent = '⠿';
+    dragHandle.style.cssText = 'color:#999;font-size:14px;margin-top:5px;flex-shrink:0;line-height:1;';
+    row.appendChild(dragHandle);
+    const content = document.createElement('div');
+    content.style.cssText = 'flex:1;min-width:0;';
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;';
+    const origTitle = el.querySelector('.ant-list-item-meta-title');
+    const textSpan = origTitle
+      ? (origTitle.cloneNode(true) as HTMLElement)
+      : document.createElement('span');
+    if (!origTitle) textSpan.textContent = q.text;
+    textSpan.style.cssText = (textSpan.style.cssText || '') + ';flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    header.appendChild(textSpan);
+    const actionsWrap = document.createElement('span');
+    actionsWrap.style.cssText = 'display:inline-flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px;margin-top:30px;';
+    const origActions = el.querySelector('ul');
+    if (origActions) {
+      Array.from(origActions.querySelectorAll('li')).forEach(li => {
+        const cloneLi = li.cloneNode(true) as HTMLElement;
+        cloneLi.style.cssText = 'display:inline-flex;align-items:center;list-style:none;';
+        const btn = cloneLi.querySelector('button');
+        if (btn) btn.style.cssText = btn.style.cssText + ';font-size:16px;';
+        actionsWrap.appendChild(cloneLi);
+      });
+    }
+    header.appendChild(actionsWrap);
+    content.appendChild(header);
+    const tagsRow = document.createElement('div');
+    tagsRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin:4px 0;';
+    const origDesc = el.querySelector('.ant-list-item-meta-description');
+    if (origDesc) {
+      Array.from(origDesc.children).forEach(child => {
+        const clone = child.cloneNode(true) as HTMLElement;
+        tagsRow.appendChild(clone);
+      });
+    }
+    content.appendChild(tagsRow);
+    row.appendChild(content);
+    ghost.appendChild(row);
     document.body.appendChild(ghost);
     e.dataTransfer.setDragImage(ghost, e.clientX - rect.left, e.clientY - rect.top);
     requestAnimationFrame(() => document.body.removeChild(ghost));
