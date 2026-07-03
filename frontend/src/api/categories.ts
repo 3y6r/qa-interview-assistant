@@ -7,9 +7,9 @@ export const categoriesApi = {
   create: (data: { name: string }) =>
     client.post<Category>('/categories', data).then((r) => r.data),
 
-  update: (id: number, data: { name: string }) =>
+  update: (id: number, data: { name?: string; isArchived?: boolean }) =>
     client.put<Category>(`/categories/${id}`, data).then((r) => r.data),
 
-  delete: (id: number) =>
-    client.delete(`/categories/${id}`).then((r) => r.data),
+  archive: (id: number) =>
+    client.put<Category>(`/categories/${id}`, { is_archived: true }).then((r) => r.data),
 };

@@ -4,7 +4,6 @@ import type { Question, Candidate } from '../types';
 interface QuestionScore {
   questionId: number;
   score: number;
-  comment: string;
 }
 
 interface EditorState {
@@ -17,7 +16,6 @@ interface EditorState {
   removeQuestion: (id: number) => void;
   reorderQuestions: (from: number, to: number) => void;
   setScore: (questionId: number, score: number) => void;
-  setComment: (questionId: number, comment: string) => void;
   reset: () => void;
 }
 
@@ -56,15 +54,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     set((s) => ({
       scores: {
         ...s.scores,
-        [questionId]: { ...s.scores[questionId] || { questionId, comment: '' }, score },
-      },
-    })),
-
-  setComment: (questionId, comment) =>
-    set((s) => ({
-      scores: {
-        ...s.scores,
-        [questionId]: { ...s.scores[questionId] || { questionId, score: 0 }, comment },
+        [questionId]: { questionId, score },
       },
     })),
 

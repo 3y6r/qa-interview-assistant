@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Modal, List, Button, Input, Space, Popconfirm, ColorPicker, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, InboxOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import styles from './EntityManagerModal.module.css';
 
 interface Item {
   id: number;
   name: string;
   color?: string;
+  isArchived?: boolean;
 }
 
 interface Props {
@@ -16,11 +17,11 @@ interface Props {
   onClose: () => void;
   onCreate: (name: string, color?: string) => void;
   onUpdate: (id: number, name: string, color?: string) => void;
-  onDelete: (id: number) => void;
+  onArchive: (id: number) => void;
   showColor?: boolean;
 }
 
-export function EntityManagerModal({ open, title, items, onClose, onCreate, onUpdate, onDelete, showColor }: Props) {
+export function EntityManagerModal({ open, title, items, onClose, onCreate, onUpdate, onArchive, showColor }: Props) {
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState('#108ee9');
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -46,6 +47,8 @@ export function EntityManagerModal({ open, title, items, onClose, onCreate, onUp
     setEditingId(null);
   };
 
+  const activeItems = items.filter((item) => !item.isArchived);
+
   return (
     <Modal title={title} open={open} onCancel={onClose} footer={null} width={450}>
       <Space.Compact className={styles.createRow}>
@@ -57,7 +60,7 @@ export function EntityManagerModal({ open, title, items, onClose, onCreate, onUp
       </Space.Compact>
 
       <List
-        dataSource={items}
+        dataSource={activeItems}
         renderItem={(item: Item) => (
           <List.Item
             key={item.id}
@@ -71,9 +74,9 @@ export function EntityManagerModal({ open, title, items, onClose, onCreate, onUp
                     <Tooltip key="edit" title="Редактировать">
                       <Button type="link" icon={<EditOutlined />} onClick={() => startEdit(item.id, item.name, item.color)} />
                     </Tooltip>,
-                    <Popconfirm key="delete" title={`Удалить ${item.name}?`} onConfirm={() => onDelete(item.id)}>
-                      <Tooltip title="Удалить">
-                        <Button type="link" danger icon={<DeleteOutlined />} />
+                    <Popconfirm key="archive" title={`Архивировать ${item.name}?`} onConfirm={() => onArchive(item.id)}>
+                      <Tooltip title="Архивировать">
+                        <Button type="link" icon={<InboxOutlined />} />
                       </Tooltip>
                     </Popconfirm>,
                   ]

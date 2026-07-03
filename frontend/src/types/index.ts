@@ -1,93 +1,59 @@
-export type Role = 'ADMIN' | 'EDITOR' | 'OBSERVER';
-
-export type QuestionLevel = 'JUNIOR' | 'MIDDLE' | 'SENIOR';
-
-export type InterviewStatus = 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED';
-
-export interface User {
-  id: number;
-  email: string;
-  fullName: string;
-  role: Role;
-  avatar?: string;
-}
-
 export interface Tag {
   id: number;
   name: string;
-  color?: string;
+  color: string;
+  isArchived: boolean;
 }
 
 export interface Category {
   id: number;
   name: string;
+  isArchived: boolean;
 }
 
 export interface Question {
   id: number;
   text: string;
   expectedAnswer: string;
-  category: Category;
-  level: QuestionLevel | null;
+  categoryId: number;
+  levelId: number | null;
+  isArchived: boolean;
   tags: Tag[];
-  product: string | null;
-  createdBy: User;
   createdAt: string;
-  archived: boolean;
+  updatedAt: string;
 }
 
 export interface Candidate {
   candidateName: string;
   position: string;
-  level: QuestionLevel;
-  topicIds: number[];
+  level: string;
 }
 
-export interface Interview {
+export interface InterviewResult {
   id: number;
-  candidateName: string;
+  candidateFullName: string;
   position: string;
-  level: QuestionLevel;
-  status: InterviewStatus;
-  interviewer: User;
-  topics: Category[];
+  interviewDate: string;
+  averageScore: number;
+  comment: string;
   createdAt: string;
-  completedAt: string | null;
-}
-
-export interface QuestionResult {
-  id: number;
-  interviewId: number;
-  questionId: number;
-  question: Question;
-  score: number | null;
-  comment: string | null;
-  askedAt: string | null;
-}
-
-export interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  size: number;
 }
 
 export interface CreateQuestionRequest {
   text: string;
   expectedAnswer: string;
   categoryId: number;
-  level?: QuestionLevel;
+  levelId?: number;
   tagIds?: number[];
-  product?: string;
 }
 
 export interface UpdateQuestionRequest {
-  text: string;
-  expectedAnswer: string;
-  categoryId: number;
-  level?: QuestionLevel;
+  text?: string;
+  expectedAnswer?: string;
+  categoryId?: number;
+  levelId?: number;
+  isArchived?: boolean;
   tagIds?: number[];
-  product?: string;
 }
 
 export interface CreateTagRequest {
@@ -95,8 +61,7 @@ export interface CreateTagRequest {
   color?: string;
 }
 
-export interface GenerateQuestionsRequest {
-  categoryId: number;
-  level: QuestionLevel;
-  count?: number;
+export interface Level {
+  id: number;
+  name: string;
 }

@@ -1,22 +1,24 @@
 import { useState, useCallback } from 'react';
-import { Button, Empty, Tag, Card, Rate, Modal, Input } from 'antd';
-import { CloseOutlined, MenuOutlined, CommentOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { Button, Empty, Tag, Card, Rate } from 'antd';
+import { CloseOutlined, MenuOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import { useEditorStore } from '../../../stores/editorStore';
-import { QUESTION_LEVELS } from '../../../utils/constants';
+import { LEVELS_QUERY_KEY } from '../../../utils/constants';
+import { useQuery } from '@tanstack/react-query';
+import { levelsApi } from '../../../api/levels';
+import { categoriesApi } from '../../../api/categories';
 import type { Question } from '../../../types';
 import styles from './SelectedQuestionsPanel.module.css';
 
 function QuestionCard({ q, index }: { q: Question; index: number }) {
-  const { removeQuestion, reorderQuestions, selectedQuestions, scores, setScore, setComment } = useEditorStore();
+  const { removeQuestion, reorderQuestions, selectedQuestions, scores, setScore } = useEditorStore();
   const qs = scores[q.id];
   const [showAnswer, setShowAnswer] = useState(false);
-  const [commentOpen, setCommentOpen] = useState(false);
-  const [commentText, setCommentText] = useState(qs?.comment || '');
 
-  const saveComment = () => {
-    setComment(q.id, commentText);
-    setCommentOpen(false);
-  };
+  const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list });
+  const { data: levels = [] } = useQuery({ queryKey: [LEVELS_QUERY_KEY], queryFn: levelsApi.list });
+
+  const cat = categories.find((c: any) => c.id === q.categoryId);
+  const levelName = q.levelId ? levels.find((l: any) => l.id === q.levelId)?.name : null;
 
   return (
     <div className={styles.questionCard}>
@@ -34,8 +36,8 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
             </span>
           </div>
           <div className={styles.tagsRow}>
-            <Tag className={styles.tag}>{q.category.name}</Tag>
-            {q.level && <Tag color="blue" className={styles.tag}>{QUESTION_LEVELS.find(l => l.value === q.level)?.label}</Tag>}
+            {cat && <Tag className={styles.tag}>{cat.name}</Tag>}
+            {levelName && <Tag color="blue" className={styles.tag}>{levelName}</Tag>}
             {q.tags.map(t => <Tag key={t.id} color={t.color || '#108ee9'} className={styles.tag}>{t.name}</Tag>)}
           </div>
           <div className={styles.ratingRow}>
@@ -47,9 +49,6 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
               <Button type="link" size="small" icon={showAnswer ? <EyeInvisibleOutlined /> : <EyeOutlined />} onClick={() => setShowAnswer(!showAnswer)}>
                 {showAnswer ? 'Скрыть' : 'Ответ'}
               </Button>
-              <Button type="link" size="small" icon={<CommentOutlined />} onClick={() => { setCommentText(qs?.comment || ''); setCommentOpen(true); }}>
-                Комментарий
-              </Button>
             </div>
           </div>
           {showAnswer && (
@@ -59,9 +58,6 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
           )}
         </div>
       </div>
-      <Modal title="Комментарий" open={commentOpen} onCancel={() => setCommentOpen(false)} onOk={saveComment}>
-        <Input.TextArea rows={4} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Введите комментарий..." />
-      </Modal>
     </div>
   );
 }

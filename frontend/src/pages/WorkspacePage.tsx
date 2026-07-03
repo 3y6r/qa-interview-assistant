@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Modal, Statistic, Row, Col, Tag, Descriptions, Table, message } from 'antd';
+import { Button, Modal, Statistic, Row, Col, Tag, Descriptions, Table, Input, message } from 'antd';
 import { CalculatorOutlined, RotateLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import { useMutation } from '@tanstack/react-query';
 import { CandidateCard } from '../features/workspace/candidate/CandidateCard';
@@ -7,13 +7,14 @@ import { SelectedQuestionsPanel } from '../features/workspace/panel/SelectedQues
 import { QuestionList } from '../features/workspace/questions/QuestionList';
 import { useEditorStore } from '../stores/editorStore';
 import { interviewsApi } from '../api/interviews';
-import { QUESTION_LEVELS } from '../utils/constants';
+import dayjs from 'dayjs';
 import styles from './WorkspacePage.module.css';
 
 export function WorkspacePage() {
   const { candidate, selectedQuestions, scores, reset } = useEditorStore();
   const canStart = !!candidate && selectedQuestions.length > 0;
   const [resultOpen, setResultOpen] = useState(false);
+  const [generalComment, setGeneralComment] = useState('');
 
   const calculateResult = () => {
     const allScores = Object.values(scores);
@@ -44,21 +45,15 @@ export function WorkspacePage() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const interview = await interviewsApi.create({
-        candidateName: candidate!.candidateName,
+      const result = calculateResult();
+
+      await interviewsApi.create({
+        candidateFullName: candidate!.candidateName,
         position: candidate!.position,
-        level: candidate!.level,
-        topicIds: candidate!.topicIds,
-        questionIds: selectedQuestions.map((q) => q.id),
+        interviewDate: dayjs().format('YYYY-MM-DD'),
+        averageScore: result.averageScore,
+        comment: generalComment.trim() || `Средний балл: ${result.averageScore.toFixed(1)}`,
       });
-      for (const q of selectedQuestions) {
-        const qs = scores[q.id];
-        if (qs && qs.score > 0) {
-          await interviewsApi.rateQuestion(interview.id, q.id, { score: qs.score, comment: qs.comment || undefined });
-        }
-      }
-      await interviewsApi.complete(interview.id);
-      return interview;
     },
     onSuccess: () => {
       message.success('Отчёт сохранён');
@@ -79,7 +74,6 @@ export function WorkspacePage() {
     { title: '№', key: 'index', width: 40, render: (_: any, __: any, i: number) => i + 1 },
     { title: 'Вопрос', dataIndex: 'text', key: 'question' },
     { title: 'Оценка', key: 'score', render: (_: any, q: any) => scores[q.id]?.score ?? '—' },
-    { title: 'Комментарий', key: 'comment', render: (_: any, q: any) => scores[q.id]?.comment || '—' },
   ];
 
   return (
@@ -139,9 +133,16 @@ export function WorkspacePage() {
             <Descriptions size="small" column={2} className={styles.resultDescription}>
               <Descriptions.Item label="Кандидат">{candidate.candidateName}</Descriptions.Item>
               <Descriptions.Item label="Должность">{candidate.position}</Descriptions.Item>
-              <Descriptions.Item label="Уровень">{QUESTION_LEVELS.find(l => l.value === candidate.level)?.label}</Descriptions.Item>
+              <Descriptions.Item label="Уровень">{candidate.level}</Descriptions.Item>
               <Descriptions.Item label="Оценено вопросов">{result.ratedCount} / {selectedQuestions.length}</Descriptions.Item>
             </Descriptions>
+            <Input.TextArea
+              rows={3}
+              placeholder="Общий комментарий о кандидате..."
+              value={generalComment}
+              onChange={(e) => setGeneralComment(e.target.value)}
+              style={{ marginBottom: 16 }}
+            />
             <Table dataSource={selectedQuestions} columns={columns} rowKey="id" pagination={false} size="small" />
           </>
         )}
