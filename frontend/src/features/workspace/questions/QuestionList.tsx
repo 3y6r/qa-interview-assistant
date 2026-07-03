@@ -73,6 +73,27 @@ export function QuestionList() {
   const handleDragStart = useCallback((e: React.DragEvent, q: Question) => {
     e.dataTransfer.setData('application/json', JSON.stringify(q));
     e.dataTransfer.effectAllowed = 'copy';
+    const el = e.currentTarget as HTMLElement;
+    const rect = el.getBoundingClientRect();
+    const ghost = el.cloneNode(true) as HTMLElement;
+    const ul = ghost.querySelector('ul');
+    if (ul) ul.remove();
+    ghost.style.cssText = `
+      position: absolute;
+      top: -10000px;
+      left: -10000px;
+      pointer-events: none;
+      width: ${rect.width}px;
+      background: #fafafa;
+      border: 1px solid #f0f0f0;
+      border-radius: 8px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      overflow: hidden;
+      padding: 8px 12px;
+    `;
+    document.body.appendChild(ghost);
+    e.dataTransfer.setDragImage(ghost, e.clientX - rect.left, e.clientY - rect.top);
+    requestAnimationFrame(() => document.body.removeChild(ghost));
   }, []);
 
   const handleFormSubmit = (values: any) => {

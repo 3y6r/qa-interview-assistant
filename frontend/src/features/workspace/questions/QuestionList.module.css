@@ -31,6 +31,7 @@
 .listItem {
   cursor: grab;
   user-select: none;
+  border-radius: 20px;
 }
 .listItemSelected {
   opacity: 0.5;
