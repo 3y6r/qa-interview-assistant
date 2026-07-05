@@ -23,7 +23,7 @@ git clone -b develop https://github.com/3y6r/qa-interview-assistant.git
 cd qa-interview-assistant
 
 # Терминал 1 - mock-сервер
-cd mock-server-v2
+cd mock-server
 npm install && npm start
 
 # Терминал 2 - фронтенд
