@@ -11,7 +11,7 @@ import dayjs from 'dayjs';
 import styles from './WorkspacePage.module.css';
 
 export function WorkspacePage() {
-  const { sessionToken, candidate, selectedQuestions, scores, reset, restoreSession } = useEditorStore();
+  const { candidate, selectedQuestions, scores, reset, restoreSession } = useEditorStore();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
