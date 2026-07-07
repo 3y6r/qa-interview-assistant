@@ -12,6 +12,7 @@ class DummyRepo:
         self.get_calls = []
         self.get_all_calls = 0
         self.get_by_id_calls = []
+        self.get_by_ids_calls = []
 
     def list(self, **kwargs):
         self.list_calls.append(kwargs)
@@ -28,6 +29,10 @@ class DummyRepo:
     def get_by_id(self, item_id):
         self.get_by_id_calls.append(item_id)
         return self.get_result
+
+    def get_by_ids(self, item_ids):
+        self.get_by_ids_calls.append(item_ids)
+        return self.list_result
 
     def get_by_name(self, name):
         self.get_calls.append(name)

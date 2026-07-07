@@ -4,7 +4,14 @@ from sqlalchemy.orm import Session
 
 from app.exceptions.base import ValidationError
 from app.core.database import get_db
-from app.schemas.questions import QuestionArchiveResponse, QuestionCreate, QuestionRead, QuestionUpdate
+from app.schemas.questions import (
+    QuestionArchiveResponse,
+    QuestionCreate,
+    QuestionGenerationRequest,
+    QuestionGenerationResponse,
+    QuestionRead,
+    QuestionUpdate,
+)
 from app.services.question_service import QuestionService
 
 router = APIRouter(tags=["questions"])
@@ -47,6 +54,11 @@ def list_questions(
 @router.post("/questions", response_model=QuestionRead, status_code=201)
 def create_question(payload: QuestionCreate, db: Session = Depends(get_db)):
     return QuestionService(db).create_question(payload)
+
+
+@router.post("/questions/generate", response_model=QuestionGenerationResponse)
+def generate_questions(payload: QuestionGenerationRequest, db: Session = Depends(get_db)):
+    return QuestionService(db).generate_questions(payload)
 
 
 @router.get("/questions/{question_id}", response_model=QuestionRead)
