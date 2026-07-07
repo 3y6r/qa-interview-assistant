@@ -90,6 +90,11 @@ class QuestionService:
         question.is_archived = True
         return self.repo.update(question)
 
+    def unarchive_question(self, question_id: int) -> Question:
+        question = self.get_question(question_id)
+        question.is_archived = False
+        return self.repo.update(question)
+
     def delete_question(self, question_id: int) -> None:
         question = self.repo.get(question_id)
         if question is None:

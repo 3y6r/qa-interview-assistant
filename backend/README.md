@@ -61,20 +61,25 @@ On startup the app creates default levels:
 - `GET /api/categories`
 - `POST /api/categories`
 - `PUT /api/categories/{id}`
+- `PATCH /api/categories/{id}/archive`
+- `PATCH /api/categories/{id}/unarchive`
 - `GET /api/levels`
 - `GET /api/tags`
 - `POST /api/tags`
 - `PUT /api/tags/{id}`
 - `PATCH /api/tags/{id}/archive`
+- `PATCH /api/tags/{id}/unarchive`
 - `GET /api/questions`
 - `POST /api/questions`
 - `GET /api/questions/{id}`
 - `PUT /api/questions/{id}`
 - `DELETE /api/questions/{id}`
 - `PATCH /api/questions/{id}/archive`
+- `PATCH /api/questions/{id}/unarchive`
 - `GET /api/interview-results`
 - `POST /api/interview-results`
 - `GET /api/interview-results/{id}`
+- `DELETE /api/interview-results/{id}`
 
 ## Notes
 

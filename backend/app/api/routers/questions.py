@@ -64,6 +64,11 @@ def archive_question(question_id: int, db: Session = Depends(get_db)):
     return QuestionService(db).archive_question(question_id)
 
 
+@router.patch("/questions/{question_id}/unarchive", response_model=QuestionArchiveResponse)
+def unarchive_question(question_id: int, db: Session = Depends(get_db)):
+    return QuestionService(db).unarchive_question(question_id)
+
+
 @router.delete("/questions/{question_id}", status_code=204)
 def delete_question(question_id: int, db: Session = Depends(get_db)):
     QuestionService(db).delete_question(question_id)

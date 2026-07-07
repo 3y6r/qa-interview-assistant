@@ -165,6 +165,35 @@ def test_archive_question_sets_flag(monkeypatch):
     assert question_repo.updated == [question]
 
 
+def test_unarchive_question_sets_flag(monkeypatch):
+    question = make_question()
+    question.is_archived = True
+    question_repo = DummyRepo(get_result=question)
+    monkeypatch.setattr(module, "QuestionRepository", lambda db: question_repo)
+    monkeypatch.setattr(module, "CategoryRepository", lambda db: DummyRepo())
+    monkeypatch.setattr(module, "LevelRepository", lambda db: DummyRepo())
+
+    service = QuestionService(DummySession())
+    result = service.unarchive_question(1)
+
+    assert result.is_archived is False
+    assert question_repo.updated == [question]
+
+
+def test_unarchive_question_missing_raises_not_found(monkeypatch):
+    question_repo = DummyRepo(get_result=None)
+    monkeypatch.setattr(module, "QuestionRepository", lambda db: question_repo)
+    monkeypatch.setattr(module, "CategoryRepository", lambda db: DummyRepo())
+    monkeypatch.setattr(module, "LevelRepository", lambda db: DummyRepo())
+
+    service = QuestionService(DummySession())
+
+    with pytest.raises(NotFoundError, match="Question not found"):
+        service.unarchive_question(1)
+
+    assert question_repo.updated == []
+
+
 def test_delete_question_deletes_entity(monkeypatch):
     question = make_question()
     question_repo = DummyRepo(get_result=question)

@@ -45,3 +45,9 @@ class InterviewResultService:
                 comment=comment,
             )
         )
+
+    def delete_result(self, result_id: int) -> None:
+        result = self.repo.get(result_id)
+        if result is None:
+            raise NotFoundError("Interview result not found")
+        self.repo.delete(result)

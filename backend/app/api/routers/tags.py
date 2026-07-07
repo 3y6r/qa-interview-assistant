@@ -26,3 +26,8 @@ def update_tag(tag_id: int, payload: TagUpdate, db: Session = Depends(get_db)):
 @router.patch("/tags/{tag_id}/archive", response_model=TagResponse)
 def archive_tag(tag_id: int, db: Session = Depends(get_db)):
     return TagService(db).archive_tag(tag_id)
+
+
+@router.patch("/tags/{tag_id}/unarchive", response_model=TagResponse)
+def unarchive_tag(tag_id: int, db: Session = Depends(get_db)):
+    return TagService(db).unarchive_tag(tag_id)

@@ -54,6 +54,13 @@ class TagService:
         tag.is_archived = True
         return self.repo.update(tag)
 
+    def unarchive_tag(self, tag_id: int) -> Tag:
+        tag = self.repo.get_by_id(tag_id)
+        if tag is None:
+            raise NotFoundError("Tag not found")
+        tag.is_archived = False
+        return self.repo.update(tag)
+
     def _normalize_color(self, color: str | None) -> str:
         if color is None:
             return "#808080"

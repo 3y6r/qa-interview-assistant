@@ -91,6 +91,30 @@ def test_archive_tag_sets_flag(monkeypatch):
     assert repo.updated == [tag]
 
 
+def test_unarchive_tag_sets_flag(monkeypatch):
+    tag = Tag(id=1, name="SQL", color="#808080", is_archived=True)
+    repo = DummyRepo(get_result=tag)
+    monkeypatch.setattr(module, "TagRepository", lambda db: repo)
+
+    service = TagService(DummySession())
+    result = service.unarchive_tag(1)
+
+    assert result.is_archived is False
+    assert repo.updated == [tag]
+
+
+def test_unarchive_tag_missing_raises_not_found(monkeypatch):
+    repo = DummyRepo(get_result=None)
+    monkeypatch.setattr(module, "TagRepository", lambda db: repo)
+
+    service = TagService(DummySession())
+
+    with pytest.raises(NotFoundError, match="Tag not found"):
+        service.unarchive_tag(1)
+
+    assert repo.updated == []
+
+
 def test_update_tag_missing_raises_not_found(monkeypatch):
     repo = DummyRepo(get_result=None)
     monkeypatch.setattr(module, "TagRepository", lambda db: repo)

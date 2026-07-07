@@ -38,3 +38,7 @@ class InterviewResultRepository:
         self.db.commit()
         self.db.refresh(result)
         return result
+
+    def delete(self, result: InterviewResult) -> None:
+        self.db.delete(result)
+        self.db.commit()

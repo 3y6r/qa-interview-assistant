@@ -37,3 +37,17 @@ class CategoryService:
         if payload.is_archived is not None:
             category.is_archived = payload.is_archived
         return self.repo.update(category)
+
+    def archive_category(self, category_id: int) -> Category:
+        category = self.repo.get(category_id)
+        if category is None:
+            raise NotFoundError("Category not found")
+        category.is_archived = True
+        return self.repo.update(category)
+
+    def unarchive_category(self, category_id: int) -> Category:
+        category = self.repo.get(category_id)
+        if category is None:
+            raise NotFoundError("Category not found")
+        category.is_archived = False
+        return self.repo.update(category)
