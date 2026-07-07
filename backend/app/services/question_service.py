@@ -6,13 +6,22 @@ from app.repositories.category_repository import CategoryRepository
 from app.repositories.level_repository import LevelRepository
 from app.repositories.question_repository import QuestionRepository
 from app.repositories.tag_repository import TagRepository
-from app.schemas.questions import GeneratedQuestionItem, GeneratedQuestionTag, QuestionGenerationResponse
+from app.schemas.questions import (
+    GeneratedQuestionItem,
+    GeneratedQuestionTag,
+    QuestionGenerationResponse,
+)
 from app.schemas.questions import QuestionCreate, QuestionUpdate
-from app.services.gemini_question_generator import GeminiQuestionGenerator, GeminiQuestionItem
+from app.services.gemini_question_generator import (
+    GeminiQuestionGenerator,
+    GeminiQuestionItem,
+)
 
 
 class QuestionService:
-    def __init__(self, db: Session, question_generator: GeminiQuestionGenerator | None = None):
+    def __init__(
+        self, db: Session, question_generator: GeminiQuestionGenerator | None = None
+    ):
         self.repo = QuestionRepository(db)
         self.category_repo = CategoryRepository(db)
         self.level_repo = LevelRepository(db)
@@ -134,7 +143,9 @@ class QuestionService:
             additional_text=getattr(payload, "additional_text", None),
         )
         if len(generated.questions) != payload.num_questions:
-            raise ValidationError("Gemini response questions count does not match request")
+            raise ValidationError(
+                "Gemini response questions count does not match request"
+            )
 
         return QuestionGenerationResponse(
             questions=[

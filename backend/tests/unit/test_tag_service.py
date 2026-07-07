@@ -11,7 +11,9 @@ from tests.unit.helpers import DummyRepo, DummySession
 
 
 def test_list_tags_uses_repository(monkeypatch):
-    repo = DummyRepo(list_result=[Tag(id=1, name="SQL", color="#FF5733", is_archived=False)])
+    repo = DummyRepo(
+        list_result=[Tag(id=1, name="SQL", color="#FF5733", is_archived=False)]
+    )
     monkeypatch.setattr(module, "TagRepository", lambda db: repo)
 
     service = TagService(DummySession())
@@ -22,7 +24,9 @@ def test_list_tags_uses_repository(monkeypatch):
 
 
 def test_list_tags_passes_archive_filter(monkeypatch):
-    repo = DummyRepo(list_result=[Tag(id=1, name="SQL", color="#FF5733", is_archived=False)])
+    repo = DummyRepo(
+        list_result=[Tag(id=1, name="SQL", color="#FF5733", is_archived=False)]
+    )
     monkeypatch.setattr(module, "TagRepository", lambda db: repo)
 
     service = TagService(DummySession())
@@ -57,7 +61,9 @@ def test_create_tag_rejects_invalid_color(monkeypatch):
 
 
 def test_create_tag_rejects_duplicate_name(monkeypatch):
-    repo = DummyRepo(get_result=Tag(id=1, name="SQL", color="#FF5733", is_archived=False))
+    repo = DummyRepo(
+        get_result=Tag(id=1, name="SQL", color="#FF5733", is_archived=False)
+    )
     monkeypatch.setattr(module, "TagRepository", lambda db: repo)
 
     service = TagService(DummySession())
@@ -72,7 +78,9 @@ def test_update_tag_updates_name_and_color(monkeypatch):
     monkeypatch.setattr(module, "TagRepository", lambda db: repo)
 
     service = TagService(DummySession())
-    result = service.update_tag(1, SimpleNamespace(name="  Databases  ", color="#33AAFF"))
+    result = service.update_tag(
+        1, SimpleNamespace(name="  Databases  ", color="#33AAFF")
+    )
 
     assert result.name == "Databases"
     assert result.color == "#33AAFF"
@@ -85,7 +93,9 @@ def test_update_tag_can_archive(monkeypatch):
     monkeypatch.setattr(module, "TagRepository", lambda db: repo)
 
     service = TagService(DummySession())
-    result = service.update_tag(1, SimpleNamespace(name=None, color=None, is_archived=True))
+    result = service.update_tag(
+        1, SimpleNamespace(name=None, color=None, is_archived=True)
+    )
 
     assert result.is_archived is True
     assert repo.updated == [tag]

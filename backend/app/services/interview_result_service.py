@@ -1,5 +1,3 @@
-from datetime import date
-
 from sqlalchemy.orm import Session
 
 from app.exceptions.base import NotFoundError, ValidationError
@@ -12,8 +10,20 @@ class InterviewResultService:
     def __init__(self, db: Session):
         self.repo = InterviewResultRepository(db)
 
-    def list_results(self, *, candidate_full_name=None, date_from=None, date_to=None, limit=None, offset=None):
-        kwargs = dict(candidate_full_name=candidate_full_name, date_from=date_from, date_to=date_to)
+    def list_results(
+        self,
+        *,
+        candidate_full_name=None,
+        date_from=None,
+        date_to=None,
+        limit=None,
+        offset=None,
+    ):
+        kwargs = dict(
+            candidate_full_name=candidate_full_name,
+            date_from=date_from,
+            date_to=date_to,
+        )
         if limit is not None:
             kwargs["limit"] = limit
         if offset is not None:

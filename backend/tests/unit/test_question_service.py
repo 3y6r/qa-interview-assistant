@@ -10,7 +10,10 @@ from app.models.question import Question
 from app.models.tag import Tag
 from app.schemas.questions import QuestionGenerationRequest
 from app.services import question_service as module
-from app.services.gemini_question_generator import GeminiQuestionItem, GeminiQuestionsResponse
+from app.services.gemini_question_generator import (
+    GeminiQuestionItem,
+    GeminiQuestionsResponse,
+)
 from app.services.question_service import QuestionService
 
 from tests.unit.helpers import DummyRepo, DummySession
@@ -31,7 +34,9 @@ def make_question():
 
 def test_create_question_trims_and_creates(monkeypatch):
     question_repo = DummyRepo()
-    category_repo = DummyRepo(get_result=Category(id=1, name="Backend", is_archived=False))
+    category_repo = DummyRepo(
+        get_result=Category(id=1, name="Backend", is_archived=False)
+    )
     level_repo = DummyRepo(get_result=Level(id=2, name="Junior"))
 
     monkeypatch.setattr(module, "QuestionRepository", lambda db: question_repo)
@@ -57,7 +62,9 @@ def test_create_question_trims_and_creates(monkeypatch):
 
 def test_create_question_rejects_empty_fields(monkeypatch):
     question_repo = DummyRepo()
-    category_repo = DummyRepo(get_result=Category(id=1, name="Backend", is_archived=False))
+    category_repo = DummyRepo(
+        get_result=Category(id=1, name="Backend", is_archived=False)
+    )
     level_repo = DummyRepo(get_result=Level(id=2, name="Junior"))
 
     monkeypatch.setattr(module, "QuestionRepository", lambda db: question_repo)
@@ -68,12 +75,16 @@ def test_create_question_rejects_empty_fields(monkeypatch):
 
     with pytest.raises(ValidationError, match="Question text cannot be empty"):
         service.create_question(
-            SimpleNamespace(text="   ", expected_answer="Answer", category_id=1, level_id=2)
+            SimpleNamespace(
+                text="   ", expected_answer="Answer", category_id=1, level_id=2
+            )
         )
 
     with pytest.raises(ValidationError, match="Expected answer cannot be empty"):
         service.create_question(
-            SimpleNamespace(text="Question", expected_answer="   ", category_id=1, level_id=2)
+            SimpleNamespace(
+                text="Question", expected_answer="   ", category_id=1, level_id=2
+            )
         )
 
 
@@ -90,7 +101,9 @@ def test_create_question_rejects_missing_foreign_keys(monkeypatch):
 
     with pytest.raises(NotFoundError, match="Category not found"):
         service.create_question(
-            SimpleNamespace(text="Question", expected_answer="Answer", category_id=1, level_id=2)
+            SimpleNamespace(
+                text="Question", expected_answer="Answer", category_id=1, level_id=2
+            )
         )
 
 
@@ -108,7 +121,9 @@ def test_create_question_rejects_archived_category(monkeypatch):
 
     with pytest.raises(ValidationError, match="Category is archived"):
         service.create_question(
-            SimpleNamespace(text="Question", expected_answer="Answer", category_id=1, level_id=2)
+            SimpleNamespace(
+                text="Question", expected_answer="Answer", category_id=1, level_id=2
+            )
         )
 
 
@@ -127,7 +142,9 @@ def test_get_question_missing_raises_not_found(monkeypatch):
 def test_update_question_updates_fields(monkeypatch):
     question = make_question()
     question_repo = DummyRepo(get_result=question)
-    category_repo = DummyRepo(get_result=Category(id=9, name="New Category", is_archived=False))
+    category_repo = DummyRepo(
+        get_result=Category(id=9, name="New Category", is_archived=False)
+    )
     level_repo = DummyRepo(get_result=Level(id=8, name="Middle"))
 
     monkeypatch.setattr(module, "QuestionRepository", lambda db: question_repo)
@@ -218,7 +235,9 @@ def test_list_questions_passes_filters(monkeypatch):
     monkeypatch.setattr(module, "LevelRepository", lambda db: DummyRepo())
 
     service = QuestionService(DummySession())
-    items = service.list_questions(text="api", category_id=1, level_id=2, is_archived=False)
+    items = service.list_questions(
+        text="api", category_id=1, level_id=2, is_archived=False
+    )
 
     assert len(items) == 1
     assert question_repo.list_calls == [
@@ -238,9 +257,13 @@ class FakeQuestionGenerator:
 
 def test_generate_questions_passes_criteria_and_validates_response(monkeypatch):
     question_repo = DummyRepo(list_result=[make_question()])
-    category_repo = DummyRepo(get_result=Category(id=1, name="Backend", is_archived=False))
+    category_repo = DummyRepo(
+        get_result=Category(id=1, name="Backend", is_archived=False)
+    )
     level_repo = DummyRepo(get_result=Level(id=2, name="Middle"))
-    tag_repo = DummyRepo(list_result=[Tag(id=3, name="SQL", color="#808080", is_archived=False)])
+    tag_repo = DummyRepo(
+        list_result=[Tag(id=3, name="SQL", color="#808080", is_archived=False)]
+    )
     generator = FakeQuestionGenerator(
         GeminiQuestionsResponse(
             questions=[
@@ -262,7 +285,13 @@ def test_generate_questions_passes_criteria_and_validates_response(monkeypatch):
 
     service = QuestionService(DummySession(), question_generator=generator)
     result = service.generate_questions(
-        SimpleNamespace(category_id=1, level_id=2, tag_ids=[3], num_questions=1, additional_text="про joins")
+        SimpleNamespace(
+            category_id=1,
+            level_id=2,
+            tag_ids=[3],
+            num_questions=1,
+            additional_text="про joins",
+        )
     )
 
     assert result.questions[0].text == "Что такое SQL?"
@@ -271,7 +300,13 @@ def test_generate_questions_passes_criteria_and_validates_response(monkeypatch):
     assert result.questions[0].level_id == 2
     assert result.questions[0].tags[0].name == "SQL"
     assert question_repo.list_calls == [
-        {"category_id": 1, "level_id": 2, "tag_ids": [3], "is_archived": False, "limit": 100}
+        {
+            "category_id": 1,
+            "level_id": 2,
+            "tag_ids": [3],
+            "is_archived": False,
+            "limit": 100,
+        }
     ]
     assert generator.calls == [
         {
@@ -295,15 +330,23 @@ def test_generate_questions_missing_level_raises_not_found(monkeypatch):
     monkeypatch.setattr(
         module,
         "CategoryRepository",
-        lambda db: DummyRepo(get_result=Category(id=1, name="Backend", is_archived=False)),
+        lambda db: DummyRepo(
+            get_result=Category(id=1, name="Backend", is_archived=False)
+        ),
     )
-    monkeypatch.setattr(module, "LevelRepository", lambda db: DummyRepo(get_result=None))
+    monkeypatch.setattr(
+        module, "LevelRepository", lambda db: DummyRepo(get_result=None)
+    )
     monkeypatch.setattr(module, "TagRepository", lambda db: DummyRepo())
 
-    service = QuestionService(DummySession(), question_generator=FakeQuestionGenerator(None))
+    service = QuestionService(
+        DummySession(), question_generator=FakeQuestionGenerator(None)
+    )
 
     with pytest.raises(NotFoundError, match="Level not found"):
-        service.generate_questions(SimpleNamespace(category_id=1, level_id=2, tag_ids=[], num_questions=1))
+        service.generate_questions(
+            SimpleNamespace(category_id=1, level_id=2, tag_ids=[], num_questions=1)
+        )
 
 
 def test_generate_questions_rejects_mismatched_gemini_response(monkeypatch):
@@ -324,15 +367,25 @@ def test_generate_questions_rejects_mismatched_gemini_response(monkeypatch):
     monkeypatch.setattr(
         module,
         "CategoryRepository",
-        lambda db: DummyRepo(get_result=Category(id=1, name="Backend", is_archived=False)),
+        lambda db: DummyRepo(
+            get_result=Category(id=1, name="Backend", is_archived=False)
+        ),
     )
-    monkeypatch.setattr(module, "LevelRepository", lambda db: DummyRepo(get_result=Level(id=2, name="Middle")))
+    monkeypatch.setattr(
+        module,
+        "LevelRepository",
+        lambda db: DummyRepo(get_result=Level(id=2, name="Middle")),
+    )
     monkeypatch.setattr(module, "TagRepository", lambda db: DummyRepo())
 
     service = QuestionService(DummySession(), question_generator=generator)
 
-    with pytest.raises(ValidationError, match="Gemini response level does not match request"):
-        service.generate_questions(SimpleNamespace(category_id=1, level_id=2, tag_ids=[], num_questions=1))
+    with pytest.raises(
+        ValidationError, match="Gemini response level does not match request"
+    ):
+        service.generate_questions(
+            SimpleNamespace(category_id=1, level_id=2, tag_ids=[], num_questions=1)
+        )
 
 
 def test_generate_questions_ignores_gemini_tags_when_no_tags_requested(monkeypatch):
@@ -353,12 +406,20 @@ def test_generate_questions_ignores_gemini_tags_when_no_tags_requested(monkeypat
     monkeypatch.setattr(
         module,
         "CategoryRepository",
-        lambda db: DummyRepo(get_result=Category(id=1, name="Backend", is_archived=False)),
+        lambda db: DummyRepo(
+            get_result=Category(id=1, name="Backend", is_archived=False)
+        ),
     )
-    monkeypatch.setattr(module, "LevelRepository", lambda db: DummyRepo(get_result=Level(id=2, name="Middle")))
+    monkeypatch.setattr(
+        module,
+        "LevelRepository",
+        lambda db: DummyRepo(get_result=Level(id=2, name="Middle")),
+    )
     monkeypatch.setattr(module, "TagRepository", lambda db: DummyRepo())
 
     service = QuestionService(DummySession(), question_generator=generator)
-    result = service.generate_questions(SimpleNamespace(category_id=1, level_id=2, tag_ids=[], num_questions=1))
+    result = service.generate_questions(
+        SimpleNamespace(category_id=1, level_id=2, tag_ids=[], num_questions=1)
+    )
 
     assert result.questions[0].tags == []

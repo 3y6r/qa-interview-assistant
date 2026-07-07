@@ -11,8 +11,12 @@ def test_post_generate_content_timeout_returns_validation_error(monkeypatch):
         calls.append((args, kwargs))
         raise TimeoutError
 
-    monkeypatch.setattr("app.services.gemini_question_generator.settings.gemini_api_key", "test-key")
-    monkeypatch.setattr("app.services.gemini_question_generator.settings.gemini_timeout_seconds", 60)
+    monkeypatch.setattr(
+        "app.services.gemini_question_generator.settings.gemini_api_key", "test-key"
+    )
+    monkeypatch.setattr(
+        "app.services.gemini_question_generator.settings.gemini_timeout_seconds", 60
+    )
     monkeypatch.setattr("urllib.request.urlopen", raise_timeout)
 
     generator = GeminiQuestionGenerator()

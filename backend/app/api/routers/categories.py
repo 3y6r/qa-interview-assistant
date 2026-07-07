@@ -19,7 +19,9 @@ def create_category(payload: CategoryCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/categories/{category_id}", response_model=CategoryRead)
-def update_category(category_id: int, payload: CategoryUpdate, db: Session = Depends(get_db)):
+def update_category(
+    category_id: int, payload: CategoryUpdate, db: Session = Depends(get_db)
+):
     return CategoryService(db).update_category(category_id, payload)
 
 

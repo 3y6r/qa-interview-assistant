@@ -30,7 +30,9 @@ def list_interview_results(
 
 
 @router.post("/interview-results", response_model=InterviewResultRead, status_code=201)
-def create_interview_result(payload: InterviewResultCreate, db: Session = Depends(get_db)):
+def create_interview_result(
+    payload: InterviewResultCreate, db: Session = Depends(get_db)
+):
     return InterviewResultService(db).create_result(payload)
 
 

@@ -4,7 +4,12 @@ import socket
 import urllib.error
 import urllib.request
 
-from pydantic import BaseModel, Field, ValidationError as PydanticValidationError, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    ValidationError as PydanticValidationError,
+    model_validator,
+)
 
 from app.core.config import settings
 from app.exceptions.base import ValidationError
@@ -83,12 +88,22 @@ class GeminiQuestionGenerator:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(request, timeout=settings.gemini_timeout_seconds) as response:
+            with urllib.request.urlopen(
+                request, timeout=settings.gemini_timeout_seconds
+            ) as response:
                 raw_body = response.read().decode("utf-8")
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="ignore")
-            raise ValidationError(f"Gemini request failed: {detail or exc.reason}") from exc
-        except (urllib.error.URLError, TimeoutError, socket.timeout, http.client.HTTPException, OSError) as exc:
+            raise ValidationError(
+                f"Gemini request failed: {detail or exc.reason}"
+            ) from exc
+        except (
+            urllib.error.URLError,
+            TimeoutError,
+            socket.timeout,
+            http.client.HTTPException,
+            OSError,
+        ) as exc:
             raise ValidationError("Gemini service is unavailable") from exc
 
         try:

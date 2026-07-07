@@ -9,7 +9,9 @@ def make_interview_result_payload():
 
 
 def test_delete_interview_result(client):
-    created = client.post("/api/interview-results", json=make_interview_result_payload())
+    created = client.post(
+        "/api/interview-results", json=make_interview_result_payload()
+    )
     assert created.status_code == 201
     result_id = created.json()["id"]
 

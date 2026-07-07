@@ -19,7 +19,9 @@ class InterviewResultRepository:
     ) -> list[InterviewResult]:
         query = select(InterviewResult).order_by(InterviewResult.id)
         if candidate_full_name:
-            query = query.where(InterviewResult.candidate_full_name.ilike(f"%{candidate_full_name}%"))
+            query = query.where(
+                InterviewResult.candidate_full_name.ilike(f"%{candidate_full_name}%")
+            )
         if date_from is not None:
             query = query.where(InterviewResult.interview_date >= date_from)
         if date_to is not None:

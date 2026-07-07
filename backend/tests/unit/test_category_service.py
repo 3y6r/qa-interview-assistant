@@ -69,7 +69,9 @@ def test_update_category_renames_and_archives(monkeypatch):
     monkeypatch.setattr(module, "CategoryRepository", lambda db: repo)
 
     service = CategoryService(DummySession())
-    result = service.update_category(1, SimpleNamespace(name="  New  ", is_archived=True))
+    result = service.update_category(
+        1, SimpleNamespace(name="  New  ", is_archived=True)
+    )
 
     assert result.name == "New"
     assert result.is_archived is True

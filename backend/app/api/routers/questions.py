@@ -57,7 +57,9 @@ def create_question(payload: QuestionCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/questions/generate", response_model=QuestionGenerationResponse)
-def generate_questions(payload: QuestionGenerationRequest, db: Session = Depends(get_db)):
+def generate_questions(
+    payload: QuestionGenerationRequest, db: Session = Depends(get_db)
+):
     return QuestionService(db).generate_questions(payload)
 
 
@@ -67,16 +69,22 @@ def get_question(question_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/questions/{question_id}", response_model=QuestionRead)
-def update_question(question_id: int, payload: QuestionUpdate, db: Session = Depends(get_db)):
+def update_question(
+    question_id: int, payload: QuestionUpdate, db: Session = Depends(get_db)
+):
     return QuestionService(db).update_question(question_id, payload)
 
 
-@router.patch("/questions/{question_id}/archive", response_model=QuestionArchiveResponse)
+@router.patch(
+    "/questions/{question_id}/archive", response_model=QuestionArchiveResponse
+)
 def archive_question(question_id: int, db: Session = Depends(get_db)):
     return QuestionService(db).archive_question(question_id)
 
 
-@router.patch("/questions/{question_id}/unarchive", response_model=QuestionArchiveResponse)
+@router.patch(
+    "/questions/{question_id}/unarchive", response_model=QuestionArchiveResponse
+)
 def unarchive_question(question_id: int, db: Session = Depends(get_db)):
     return QuestionService(db).unarchive_question(question_id)
 
