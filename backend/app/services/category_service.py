@@ -10,8 +10,8 @@ class CategoryService:
     def __init__(self, db: Session):
         self.repo = CategoryRepository(db)
 
-    def list_categories(self):
-        return self.repo.list()
+    def list_categories(self, *, is_archived: bool | None = None):
+        return self.repo.list(is_archived=is_archived)
 
     def create_category(self, payload: CategoryCreate) -> Category:
         name = payload.name.strip()
@@ -36,4 +36,18 @@ class CategoryService:
             category.name = name
         if payload.is_archived is not None:
             category.is_archived = payload.is_archived
+        return self.repo.update(category)
+
+    def archive_category(self, category_id: int) -> Category:
+        category = self.repo.get(category_id)
+        if category is None:
+            raise NotFoundError("Category not found")
+        category.is_archived = True
+        return self.repo.update(category)
+
+    def unarchive_category(self, category_id: int) -> Category:
+        category = self.repo.get(category_id)
+        if category is None:
+            raise NotFoundError("Category not found")
+        category.is_archived = False
         return self.repo.update(category)

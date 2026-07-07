@@ -30,10 +30,17 @@ def list_interview_results(
 
 
 @router.post("/interview-results", response_model=InterviewResultRead, status_code=201)
-def create_interview_result(payload: InterviewResultCreate, db: Session = Depends(get_db)):
+def create_interview_result(
+    payload: InterviewResultCreate, db: Session = Depends(get_db)
+):
     return InterviewResultService(db).create_result(payload)
 
 
 @router.get("/interview-results/{result_id}", response_model=InterviewResultRead)
 def get_interview_result(result_id: int, db: Session = Depends(get_db)):
     return InterviewResultService(db).get_result(result_id)
+
+
+@router.delete("/interview-results/{result_id}", status_code=204)
+def delete_interview_result(result_id: int, db: Session = Depends(get_db)):
+    InterviewResultService(db).delete_result(result_id)

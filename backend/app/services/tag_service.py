@@ -14,8 +14,8 @@ class TagService:
     def __init__(self, db: Session):
         self.repo = TagRepository(db)
 
-    def list_tags(self):
-        return self.repo.get_all()
+    def list_tags(self, *, is_archived: bool | None = None):
+        return self.repo.get_all(is_archived=is_archived)
 
     def create_tag(self, payload: TagCreate) -> Tag:
         name = payload.name.strip()
@@ -52,6 +52,13 @@ class TagService:
         if tag is None:
             raise NotFoundError("Tag not found")
         tag.is_archived = True
+        return self.repo.update(tag)
+
+    def unarchive_tag(self, tag_id: int) -> Tag:
+        tag = self.repo.get_by_id(tag_id)
+        if tag is None:
+            raise NotFoundError("Tag not found")
+        tag.is_archived = False
         return self.repo.update(tag)
 
     def _normalize_color(self, color: str | None) -> str:

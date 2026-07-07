@@ -9,8 +9,8 @@ router = APIRouter(tags=["tags"])
 
 
 @router.get("/tags", response_model=list[TagResponse])
-def list_tags(db: Session = Depends(get_db)):
-    return TagService(db).list_tags()
+def list_tags(is_archived: bool | None = None, db: Session = Depends(get_db)):
+    return TagService(db).list_tags(is_archived=is_archived)
 
 
 @router.post("/tags", response_model=TagResponse, status_code=201)
@@ -26,3 +26,8 @@ def update_tag(tag_id: int, payload: TagUpdate, db: Session = Depends(get_db)):
 @router.patch("/tags/{tag_id}/archive", response_model=TagResponse)
 def archive_tag(tag_id: int, db: Session = Depends(get_db)):
     return TagService(db).archive_tag(tag_id)
+
+
+@router.patch("/tags/{tag_id}/unarchive", response_model=TagResponse)
+def unarchive_tag(tag_id: int, db: Session = Depends(get_db)):
+    return TagService(db).unarchive_tag(tag_id)
