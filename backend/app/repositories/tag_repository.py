@@ -14,8 +14,11 @@ class TagRepository:
         self.db.refresh(tag)
         return tag
 
-    def get_all(self) -> list[Tag]:
-        return list(self.db.scalars(select(Tag).order_by(Tag.id)).all())
+    def get_all(self, *, is_archived: bool | None = None) -> list[Tag]:
+        query = select(Tag).order_by(Tag.id)
+        if is_archived is not None:
+            query = query.where(Tag.is_archived == is_archived)
+        return list(self.db.scalars(query).all())
 
     def get_by_id(self, tag_id: int) -> Tag | None:
         return self.db.get(Tag, tag_id)

@@ -14,8 +14,8 @@ class TagService:
     def __init__(self, db: Session):
         self.repo = TagRepository(db)
 
-    def list_tags(self):
-        return self.repo.get_all()
+    def list_tags(self, *, is_archived: bool | None = None):
+        return self.repo.get_all(is_archived=is_archived)
 
     def create_tag(self, payload: TagCreate) -> Tag:
         name = payload.name.strip()

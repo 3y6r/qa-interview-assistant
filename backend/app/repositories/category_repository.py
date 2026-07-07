@@ -8,8 +8,11 @@ class CategoryRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def list(self) -> list[Category]:
-        return list(self.db.scalars(select(Category).order_by(Category.id)).all())
+    def list(self, *, is_archived: bool | None = None) -> list[Category]:
+        query = select(Category).order_by(Category.id)
+        if is_archived is not None:
+            query = query.where(Category.is_archived == is_archived)
+        return list(self.db.scalars(query).all())
 
     def get(self, category_id: int) -> Category | None:
         return self.db.get(Category, category_id)

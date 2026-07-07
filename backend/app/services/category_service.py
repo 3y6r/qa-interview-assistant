@@ -10,8 +10,8 @@ class CategoryService:
     def __init__(self, db: Session):
         self.repo = CategoryRepository(db)
 
-    def list_categories(self):
-        return self.repo.list()
+    def list_categories(self, *, is_archived: bool | None = None):
+        return self.repo.list(is_archived=is_archived)
 
     def create_category(self, payload: CategoryCreate) -> Category:
         name = payload.name.strip()

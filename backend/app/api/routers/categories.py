@@ -9,8 +9,8 @@ router = APIRouter(tags=["categories"])
 
 
 @router.get("/categories", response_model=list[CategoryRead])
-def list_categories(db: Session = Depends(get_db)):
-    return CategoryService(db).list_categories()
+def list_categories(is_archived: bool | None = None, db: Session = Depends(get_db)):
+    return CategoryService(db).list_categories(is_archived=is_archived)
 
 
 @router.post("/categories", response_model=CategoryRead, status_code=201)

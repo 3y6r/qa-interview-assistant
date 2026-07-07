@@ -96,6 +96,7 @@ On startup the app creates default levels:
 - `POST /api/interview-results` requires `candidate_full_name`, `position`, `interview_date`, `average_score`, and `comment`.
 - Questions support many-to-many tags and can be filtered with `tag_ids=1,2`.
 - `POST /api/questions/generate` requires `category_id` and `level_id`; `tag_ids`, `num_questions`, and `additional_text` are optional.
+- `GET /api/categories`, `GET /api/tags`, and `GET /api/questions` support `is_archived=false` to return only non-archived items.
 - `GET /api/questions` and `GET /api/interview-results` support `limit` and `offset` for pagination. Default `limit` is 20, maximum is 100.
 - `PUT /api/tags/{id}` can update `name`, `color`, and `is_archived`.
 - `PUT /api/questions/{id}` replaces tags only when `tag_ids` is provided.

@@ -21,6 +21,18 @@ def test_list_tags_uses_repository(monkeypatch):
     assert repo.get_all_calls == 1
 
 
+def test_list_tags_passes_archive_filter(monkeypatch):
+    repo = DummyRepo(list_result=[Tag(id=1, name="SQL", color="#FF5733", is_archived=False)])
+    monkeypatch.setattr(module, "TagRepository", lambda db: repo)
+
+    service = TagService(DummySession())
+    tags = service.list_tags(is_archived=False)
+
+    assert len(tags) == 1
+    assert repo.get_all_calls == 1
+    assert repo.get_all_calls_kwargs == [{"is_archived": False}]
+
+
 def test_create_tag_defaults_color_and_trims_name(monkeypatch):
     repo = DummyRepo()
     monkeypatch.setattr(module, "TagRepository", lambda db: repo)

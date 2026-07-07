@@ -9,8 +9,8 @@ router = APIRouter(tags=["tags"])
 
 
 @router.get("/tags", response_model=list[TagResponse])
-def list_tags(db: Session = Depends(get_db)):
-    return TagService(db).list_tags()
+def list_tags(is_archived: bool | None = None, db: Session = Depends(get_db)):
+    return TagService(db).list_tags(is_archived=is_archived)
 
 
 @router.post("/tags", response_model=TagResponse, status_code=201)

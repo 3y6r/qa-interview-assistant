@@ -10,6 +10,17 @@ from app.services.category_service import CategoryService
 from tests.unit.helpers import DummyRepo, DummySession
 
 
+def test_list_categories_passes_archive_filter(monkeypatch):
+    repo = DummyRepo(list_result=[Category(id=1, name="Backend", is_archived=False)])
+    monkeypatch.setattr(module, "CategoryRepository", lambda db: repo)
+
+    service = CategoryService(DummySession())
+    categories = service.list_categories(is_archived=False)
+
+    assert len(categories) == 1
+    assert repo.list_calls == [{"is_archived": False}]
+
+
 def test_create_category_trims_name_and_creates(monkeypatch):
     repo = DummyRepo()
     monkeypatch.setattr(module, "CategoryRepository", lambda db: repo)
