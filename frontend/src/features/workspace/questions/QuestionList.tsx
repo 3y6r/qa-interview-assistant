@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Card, Input, Select, Space, Button, List, Tag, Empty, message, Popconfirm, Tooltip } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined, InboxOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined, EditOutlined, InboxOutlined, DeleteOutlined, UnorderedListOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { questionsApi } from '../../../api/questions';
 import { categoriesApi } from '../../../api/categories';
@@ -9,6 +9,7 @@ import { levelsApi } from '../../../api/levels';
 import { useEditorStore } from '../../../stores/editorStore';
 import { LEVELS_QUERY_KEY } from '../../../utils/constants';
 import { QuestionFormModal } from './QuestionFormModal';
+import { QuestionGenerateModal } from './QuestionGenerateModal';
 import type { Question } from '../../../types';
 import styles from './QuestionList.module.css';
 
@@ -20,6 +21,8 @@ export function QuestionList() {
   const [levelId, setLevelId] = useState<number | undefined>();
   const [tagIds, setTagIds] = useState<number[] | undefined>();
   const [formModal, setFormModal] = useState<{ open: boolean; question: Question | null }>({ open: false, question: null });
+  const [showArchived, setShowArchived] = useState(false);
+  const [generateOpen, setGenerateOpen] = useState(false);
 
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list });
   const { data: allTags = [] } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.list });
@@ -36,9 +39,9 @@ export function QuestionList() {
     hasNextPage,
     fetchNextPage,
   } = useInfiniteQuery({
-    queryKey: ['questions', text, categoryId, levelId, tagIds],
+    queryKey: ['questions', text, categoryId, levelId, tagIds, showArchived],
     queryFn: ({ pageParam = 0 }) =>
-      questionsApi.list({ text: text || undefined, categoryId, levelId, tagIds, isArchived: false, limit: LIMIT, offset: pageParam }),
+      questionsApi.list({ text: text || undefined, categoryId, levelId, tagIds, isArchived: showArchived, limit: LIMIT, offset: pageParam }),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length < LIMIT ? undefined : allPages.length * LIMIT;
@@ -74,6 +77,14 @@ export function QuestionList() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['questions'] });
       message.success('Вопрос архивирован');
+    },
+  });
+
+  const unarchiveMutation = useMutation({
+    mutationFn: (id: number) => questionsApi.unarchive(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+      message.success('Вопрос восстановлен из архива');
     },
   });
 
@@ -200,6 +211,12 @@ export function QuestionList() {
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setFormModal({ open: true, question: null })} className={styles.createBtn}>
             Создать
           </Button>
+          <Button icon={<UnorderedListOutlined />} onClick={() => setShowArchived(v => !v)} type={showArchived ? 'primary' : 'default'}>
+            Архив
+          </Button>
+          <Button icon={<ThunderboltOutlined />} onClick={() => setGenerateOpen(true)}>
+            AI
+          </Button>
         </div>
         <div className={styles.listWrapper}>
           {questions.length === 0 && !isLoading ? (
@@ -226,11 +243,19 @@ export function QuestionList() {
                       <Tooltip key="edit" title="Редактировать">
                         <Button type="link" icon={<EditOutlined />} onClick={() => setFormModal({ open: true, question: q })} />
                       </Tooltip>,
-                      <Popconfirm key="archive" title="Архивировать вопрос?" onConfirm={() => archiveMutation.mutate(q.id)}>
-                        <Tooltip title="Архивировать">
-                          <Button type="link" icon={<InboxOutlined />} />
-                        </Tooltip>
-                      </Popconfirm>,
+                      (showArchived ? (
+                        <Popconfirm key="unarchive" title="Восстановить вопрос?" onConfirm={() => unarchiveMutation.mutate(q.id)}>
+                          <Tooltip title="Восстановить из архива">
+                            <Button type="link" icon={<InboxOutlined />} />
+                          </Tooltip>
+                        </Popconfirm>
+                      ) : (
+                        <Popconfirm key="archive" title="Архивировать вопрос?" onConfirm={() => archiveMutation.mutate(q.id)}>
+                          <Tooltip title="Архивировать">
+                            <Button type="link" icon={<InboxOutlined />} />
+                          </Tooltip>
+                        </Popconfirm>
+                      )),
                       <Popconfirm key="delete" title="Удалить вопрос?" onConfirm={() => deleteMutation.mutate(q.id)}>
                         <Tooltip title="Удалить">
                           <Button type="link" danger icon={<DeleteOutlined />} />
@@ -272,6 +297,10 @@ export function QuestionList() {
         onClose={() => setFormModal({ open: false, question: null })}
         onSubmit={handleFormSubmit}
         loading={createMutation.isPending || updateMutation.isPending}
+      />
+      <QuestionGenerateModal
+        open={generateOpen}
+        onClose={() => setGenerateOpen(false)}
       />
     </>
   );

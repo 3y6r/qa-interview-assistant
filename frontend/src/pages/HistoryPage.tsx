@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Card, Table, Tag, Typography, Modal, Descriptions, Button, Statistic, Row, Col } from 'antd';
-import { EyeOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
+import { Card, Table, Tag, Typography, Modal, Descriptions, Button, Statistic, Row, Col, Popconfirm, message } from 'antd';
+import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ColumnsType } from 'antd/es/table';
 import { interviewsApi } from '../api/interviews';
 import type { InterviewResult } from '../types';
@@ -30,6 +30,7 @@ type Filters = {
 };
 
 export function HistoryPage() {
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<Filters>({
     candidateName: '', fromDate: '', toDate: '',
   });
@@ -43,6 +44,15 @@ export function HistoryPage() {
       dateTo: filters.toDate || undefined,
       limit: 100,
     }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => interviewsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['interview-results'] });
+      message.success('Результат удалён');
+    },
+    onError: () => message.error('Ошибка при удалении'),
   });
 
   const results = data || [];
@@ -71,14 +81,19 @@ export function HistoryPage() {
       render: (val) => val,
     },
     {
-      title: '', key: 'actions', width: 60,
+      title: '', key: 'actions', width: 100,
       render: (_, record) => (
-        <Button
-          type="link"
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => setSelectedResult(record)}
-        />
+        <span style={{ display: 'flex', gap: 4 }}>
+          <Button
+            type="link"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => setSelectedResult(record)}
+          />
+          <Popconfirm title="Удалить результат?" onConfirm={() => deleteMutation.mutate(record.id)}>
+            <Button type="link" size="small" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </span>
       ),
     },
   ];
