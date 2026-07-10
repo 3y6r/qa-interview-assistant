@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Modal, List, Button, Input, Space, Popconfirm, ColorPicker, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, InboxOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import styles from './EntityManagerModal.module.css';
 
 interface Item {
@@ -74,9 +74,9 @@ export function EntityManagerModal({ open, title, items, onClose, onCreate, onUp
                     <Tooltip key="edit" title="Редактировать">
                       <Button type="link" icon={<EditOutlined />} onClick={() => startEdit(item.id, item.name, item.color)} />
                     </Tooltip>,
-                    <Popconfirm key="archive" title={`Архивировать ${item.name}?`} onConfirm={() => onArchive(item.id)}>
-                      <Tooltip title="Архивировать">
-                        <Button type="link" icon={<InboxOutlined />} />
+                    <Popconfirm key="archive" title={`Удалить ${item.name}?`} onConfirm={() => onArchive(item.id)}>
+                      <Tooltip title="Удалить">
+                        <Button type="link" danger icon={<DeleteOutlined />} />
                       </Tooltip>
                     </Popconfirm>,
                   ]

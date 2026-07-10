@@ -208,14 +208,15 @@ export function QuestionList() {
             className={styles.filterTags}
             options={allTags.map((t: any) => ({ value: t.id, label: t.name }))}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setFormModal({ open: true, question: null })} className={styles.createBtn}>
-            Создать
-          </Button>
+          <div style={{ flex: 1 }} />
           <Button icon={<UnorderedListOutlined />} onClick={() => setShowArchived(v => !v)} type={showArchived ? 'primary' : 'default'}>
             Архив
           </Button>
           <Button icon={<ThunderboltOutlined />} onClick={() => setGenerateOpen(true)}>
             AI
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setFormModal({ open: true, question: null })}>
+            Создать
           </Button>
         </div>
         <div className={styles.listWrapper}>

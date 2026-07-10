@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Form, Select, InputNumber, Input, Button, List, Tag, message, Space } from 'antd';
+import { Modal, Form, Select, InputNumber, Input, Button, List, Tag, message, Space, Checkbox } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { questionsApi } from '../../../api/questions';
@@ -27,6 +27,7 @@ export function QuestionGenerateModal({ open, onClose }: Props) {
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
   const [generated, setGenerated] = useState<GeneratedQuestion[]>([]);
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
 
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list });
@@ -43,6 +44,7 @@ export function QuestionGenerateModal({ open, onClose }: Props) {
     }),
     onSuccess: (data) => {
       setGenerated(data.questions);
+      setSelectedIndices(data.questions.map((_: any, i: number) => i));
       message.success(`Сгенерировано ${data.questions.length} вопросов`);
     },
     onError: (err: any) => message.error(err?.response?.data?.detail || 'Ошибка при генерации'),
@@ -55,10 +57,15 @@ export function QuestionGenerateModal({ open, onClose }: Props) {
     });
   };
 
-  const handleSaveAll = async () => {
+  const handleSaveSelected = async () => {
+    const toSave = generated.filter((_, i) => selectedIndices.includes(i));
+    if (toSave.length === 0) {
+      message.warning('Выберите хотя бы один вопрос');
+      return;
+    }
     setSaving(true);
     try {
-      for (const q of generated) {
+      for (const q of toSave) {
         await questionsApi.create({
           text: q.text,
           expectedAnswer: q.expectedAnswer,
@@ -68,8 +75,9 @@ export function QuestionGenerateModal({ open, onClose }: Props) {
         });
       }
       queryClient.invalidateQueries({ queryKey: ['questions'] });
-      message.success(`Сохранено ${generated.length} вопросов`);
+      message.success(`Сохранено ${toSave.length} вопросов`);
       setGenerated([]);
+      setSelectedIndices([]);
       onClose();
     } catch {
       message.error('Ошибка при сохранении');
@@ -78,8 +86,23 @@ export function QuestionGenerateModal({ open, onClose }: Props) {
     }
   };
 
+  const toggleSelect = (index: number) => {
+    setSelectedIndices(prev =>
+      prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+    );
+  };
+
+  const toggleAll = () => {
+    if (selectedIndices.length === generated.length) {
+      setSelectedIndices([]);
+    } else {
+      setSelectedIndices(generated.map((_, i) => i));
+    }
+  };
+
   const handleClose = () => {
     setGenerated([]);
+    setSelectedIndices([]);
     form.resetFields();
     onClose();
   };
@@ -93,8 +116,8 @@ export function QuestionGenerateModal({ open, onClose }: Props) {
       footer={
         generated.length > 0
           ? [
-              <Button key="save" type="primary" icon={<PlusOutlined />} onClick={handleSaveAll} loading={saving}>
-                Добавить все ({generated.length})
+              <Button key="save" type="primary" icon={<PlusOutlined />} onClick={handleSaveSelected} loading={saving} disabled={selectedIndices.length === 0}>
+                Добавить выбранные ({selectedIndices.length})
               </Button>,
               <Button key="close" onClick={handleClose}>Закрыть</Button>,
             ]
@@ -126,12 +149,25 @@ export function QuestionGenerateModal({ open, onClose }: Props) {
 
       {generated.length > 0 && (
         <List
-          header={<strong>Сгенерированные вопросы:</strong>}
+          header={
+            <Space>
+              <Checkbox
+                checked={selectedIndices.length === generated.length}
+                indeterminate={selectedIndices.length > 0 && selectedIndices.length < generated.length}
+                onChange={toggleAll}
+              />
+              <strong>Сгенерированные вопросы ({generated.length})</strong>
+            </Space>
+          }
           dataSource={generated}
           renderItem={(q, i) => (
-            <List.Item>
+            <List.Item
+              style={{ cursor: 'pointer' }}
+              onClick={() => toggleSelect(i)}
+            >
+              <Checkbox checked={selectedIndices.includes(i)} style={{ marginRight: 8 }} />
               <List.Item.Meta
-                title={`${i + 1}. ${q.text}`}
+                title={q.text}
                 description={
                   <Space size={4} wrap>
                     <Tag>{q.categoryName}</Tag>
