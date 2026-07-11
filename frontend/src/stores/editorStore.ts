@@ -27,6 +27,7 @@ interface EditorState {
 }
 
 const STORAGE_PREFIX = 'interview_session_';
+export const ACTIVE_TOKEN_KEY = 'interview_active_token';
 
 export const useEditorStore = create<EditorState>((set, get) => ({
   sessionToken: generateId(),
@@ -83,6 +84,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   saveSession: () => {
     const { sessionToken, candidate, selectedQuestions, scores } = get();
     try {
+      sessionStorage.setItem(ACTIVE_TOKEN_KEY, sessionToken);
       localStorage.setItem(
         STORAGE_PREFIX + sessionToken,
         JSON.stringify({ candidate, selectedQuestions, scores }),
@@ -99,8 +101,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       } else {
         set({ sessionToken: token, candidate: null, selectedQuestions: [], scores: {} });
       }
+      sessionStorage.setItem(ACTIVE_TOKEN_KEY, token);
     } catch {
       set({ sessionToken: token, candidate: null, selectedQuestions: [], scores: {} });
+      sessionStorage.setItem(ACTIVE_TOKEN_KEY, token);
     }
   },
 }));
