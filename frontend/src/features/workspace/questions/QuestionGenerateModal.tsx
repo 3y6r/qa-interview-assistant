@@ -140,13 +140,13 @@ export function QuestionGenerateModal({ open, onClose }: Props) {
     >
       <Form form={form} layout="vertical" initialValues={{ numQuestions: 3 }}>
         <Form.Item name="categoryId" label="Категория" rules={[{ required: true }]}>
-          <Select options={categories.map((c: any) => ({ value: c.id, label: c.name }))} />
+          <Select options={categories.filter((c: any) => !c.isArchived).map((c: any) => ({ value: c.id, label: c.name }))} />
         </Form.Item>
         <Form.Item name="levelId" label="Грейд" rules={[{ required: true }]}>
           <Select options={levels.map((l: any) => ({ value: l.id, label: l.name }))} />
         </Form.Item>
         <Form.Item name="tagIds" label="Теги">
-          <Select mode="multiple" options={allTags.map((t: any) => ({ value: t.id, label: t.name }))} />
+          <Select mode="multiple" options={allTags.filter((t: any) => !t.isArchived).map((t: any) => ({ value: t.id, label: t.name }))} />
         </Form.Item>
         <Form.Item name="numQuestions" label="Количество вопросов">
           <InputNumber min={1} max={10} />
