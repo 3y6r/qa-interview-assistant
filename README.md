@@ -5,7 +5,6 @@
 ## Структура
 
 - `frontend/` - фронтенд приложения
-- `mock-server/` - mock-сервер для локальной разработки
 - `backend/` - FastAPI backend для справочников, тегов и итогов интервью
 
 ## Требования
@@ -21,18 +20,11 @@
 ```bash
 git clone -b develop https://github.com/3y6r/qa-interview-assistant.git
 cd qa-interview-assistant
-
-# Терминал 1 - mock-сервер
-cd mock-server
-npm install && npm start
-
-# Терминал 2 - фронтенд
 cd frontend
 npm install && npm run dev
 ```
 
 - Фронтенд: http://localhost:3001
-- Mock-сервер: http://localhost:8081
 
 ### Backend
 
