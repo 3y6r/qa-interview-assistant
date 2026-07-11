@@ -27,7 +27,7 @@
   flex-shrink: 0;
 }
 .customSelect {
-  width: 130px;
+  width: 200px;
   height: 32px;
   flex-shrink: 0;
   display: flex;
@@ -67,11 +67,19 @@
 }
 .tagChip {
   flex-shrink: 0;
-  max-width: 100px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   margin-inline-end: 0 !important;
+}
+.selectArrow {
+  flex-shrink: 0;
+  color: #bfbfbf;
+  font-size: 12px;
+  margin-left: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+.customSelect:hover .selectArrow {
+  color: #4096ff;
 }
 .tagsDropdown {
   background: #fff;
