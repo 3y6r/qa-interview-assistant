@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { Card, Input, Select, Space, Button, List, Tag, Empty, message, Popconfirm, Tooltip } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined, InboxOutlined, DeleteOutlined, UnorderedListOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { Card, Input, Select, Space, Button, List, Tag, Empty, message, Popconfirm, Tooltip, Dropdown } from 'antd';
+import { PlusOutlined, SearchOutlined, EditOutlined, InboxOutlined, DeleteOutlined, UnorderedListOutlined, ThunderboltOutlined, CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { questionsApi } from '../../../api/questions';
 import { categoriesApi } from '../../../api/categories';
@@ -199,15 +199,71 @@ export function QuestionList() {
             className={styles.filterLevel}
             options={levels.map((l: any) => ({ value: l.id, label: l.name }))}
           />
-          <Select
-            mode="multiple"
-            placeholder="Теги"
-            value={tagIds}
-            onChange={setTagIds}
-            allowClear
-            className={styles.filterTags}
-            options={allTags.map((t: any) => ({ value: t.id, label: t.name }))}
-          />
+          <Dropdown
+            trigger={['click']}
+            placement="bottomLeft"
+            dropdownRender={() => (
+              <div className={styles.tagsDropdown}>
+                {allTags.map((tag: any) => {
+                  const selected = tagIds?.includes(tag.id);
+                  return (
+                    <div
+                      key={tag.id}
+                      className={`${styles.tagOption} ${selected ? styles.tagOptionSelected : ''}`}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setTagIds((prev) => {
+                          if (prev?.includes(tag.id)) {
+                            const next = prev.filter((id) => id !== tag.id);
+                            return next.length ? next : undefined;
+                          }
+                          return [...(prev || []), tag.id];
+                        });
+                      }}
+                    >
+                      <span className={styles.tagOptionCheck}>
+                        {selected && <CheckOutlined />}
+                      </span>
+                      <Tag color={tag.color || '#108ee9'} className={styles.tagOptionTag}>
+                        {tag.name}
+                      </Tag>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          >
+            <div className={styles.customSelect}>
+              <div className={styles.tagsScrollContainer}>
+                {tagIds && tagIds.length > 0 ? (
+                  tagIds.map((id) => {
+                    const tag = allTags.find((t: any) => t.id === id);
+                    if (!tag) return null;
+                    return (
+                      <Tag
+                        key={id}
+                        closable
+                        onClose={(e) => {
+                          e.stopPropagation();
+                          setTagIds((prev) => {
+                            const next = prev?.filter((t) => t !== id);
+                            return next?.length ? next : undefined;
+                          });
+                        }}
+                        className={styles.tagChip}
+                        color={tag.color || '#108ee9'}
+                      >
+                        {tag.name}
+                      </Tag>
+                    );
+                  })
+                ) : (
+                  <span className={styles.placeholder}>Теги</span>
+                )}
+              </div>
+            </div>
+          </Dropdown>
+
           <div style={{ flex: 1 }} />
           <Button icon={<UnorderedListOutlined />} onClick={() => setShowArchived(v => !v)} type={showArchived ? 'primary' : 'default'}>
             Архив
@@ -266,9 +322,7 @@ export function QuestionList() {
                   >
                     <List.Item.Meta
                       title={
-                        <Space>
-                          <span>{q.text}</span>
-                        </Space>
+                        <span className={styles.questionText}>{q.text}</span>
                       }
                       description={
                         <Space size={4} wrap>

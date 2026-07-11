@@ -53,10 +53,12 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
   const catCreate = useMutation({ mutationFn: categoriesApi.create, onSuccess: invalidate });
   const catUpdate = useMutation({ mutationFn: ({ id, data }: { id: number; data: { name: string } }) => categoriesApi.update(id, data), onSuccess: invalidate });
   const catArchive = useMutation({ mutationFn: categoriesApi.archive, onSuccess: invalidate });
+  const catUnarchive = useMutation({ mutationFn: categoriesApi.unarchive, onSuccess: invalidate });
 
   const tagCreate = useMutation({ mutationFn: tagsApi.create, onSuccess: invalidate });
   const tagUpdate = useMutation({ mutationFn: ({ id, data }: { id: number; data: { name: string; color?: string } }) => tagsApi.update(id, data), onSuccess: invalidate });
   const tagArchive = useMutation({ mutationFn: tagsApi.archive, onSuccess: invalidate });
+  const tagUnarchive = useMutation({ mutationFn: tagsApi.unarchive, onSuccess: invalidate });
 
   const handleOk = () => form.submit();
 
@@ -79,10 +81,10 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
       >
         <Form form={form} layout="vertical" onFinish={onSubmit}>
           <Form.Item name="text" label="Вопрос" rules={[{ required: true }]}>
-            <Input.TextArea rows={3} />
+            <Input.TextArea rows={3} maxLength={1000} showCount />
           </Form.Item>
           <Form.Item name="expectedAnswer" label="Ожидаемый ответ" rules={[{ required: true }]}>
-            <Input.TextArea rows={3} />
+            <Input.TextArea rows={3} maxLength={1000} showCount />
           </Form.Item>
           <Form.Item name="categoryId" label={labelWithButton('Категория', 'categories')} rules={[{ required: true }]}>
             <Select options={categories.map((c: any) => ({ value: c.id, label: c.name }))} />
@@ -104,6 +106,8 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
         onCreate={(name) => catCreate.mutate({ name })}
         onUpdate={(id, name) => catUpdate.mutate({ id, data: { name } })}
         onArchive={(id) => catArchive.mutate(id)}
+        onUnarchive={(id) => catUnarchive.mutate(id)}
+        itemType="category"
       />
 
       <EntityManagerModal
@@ -114,7 +118,9 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
         onCreate={(name, color) => tagCreate.mutate({ name, color })}
         onUpdate={(id, name, color) => tagUpdate.mutate({ id, data: { name, color: color || '#108ee9' } })}
         onArchive={(id) => tagArchive.mutate(id)}
+        onUnarchive={(id) => tagUnarchive.mutate(id)}
         showColor
+        itemType="tag"
       />
     </>
   );

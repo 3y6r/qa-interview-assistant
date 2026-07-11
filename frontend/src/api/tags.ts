@@ -12,4 +12,7 @@ export const tagsApi = {
 
   archive: (id: number) =>
     client.patch<Tag>(`/tags/${id}/archive`).then((r) => r.data),
+
+  unarchive: (id: number) =>
+    client.patch<Tag>(`/tags/${id}/unarchive`).then((r) => r.data),
 };
