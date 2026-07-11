@@ -87,13 +87,13 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
             <Input.TextArea rows={3} maxLength={1000} showCount />
           </Form.Item>
           <Form.Item name="categoryId" label={labelWithButton('Категория', 'categories')} rules={[{ required: true }]}>
-            <Select options={categories.map((c: any) => ({ value: c.id, label: c.name }))} />
+            <Select options={categories.filter((c: any) => !c.isArchived).map((c: any) => ({ value: c.id, label: c.name }))} />
           </Form.Item>
           <Form.Item name="levelId" label="Грейд">
             <Select allowClear placeholder="Не выбран" options={levels.map((l: any) => ({ value: l.id, label: l.name }))} />
           </Form.Item>
           <Form.Item name="tagIds" label={labelWithButton('Теги', 'tags')}>
-            <Select mode="multiple" options={tags.map((t: any) => ({ value: t.id, label: t.name }))} />
+            <Select mode="multiple" options={tags.filter((t: any) => !t.isArchived).map((t: any) => ({ value: t.id, label: t.name }))} />
           </Form.Item>
         </Form>
       </Modal>
