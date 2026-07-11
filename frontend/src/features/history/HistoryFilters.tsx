@@ -23,7 +23,7 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
     candidateName: '', fromDate: '', toDate: '',
   });
 
-  const rangeValue = filters.fromDate && filters.toDate
+  const rangeValue: [dayjs.Dayjs, dayjs.Dayjs] | null = filters.fromDate && filters.toDate
     ? [dayjs(filters.fromDate), dayjs(filters.toDate)]
     : null;
 

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Card, Input, Select, Space, Button, List, Tag, Empty, message, Popconfirm, Tooltip, Dropdown } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined, InboxOutlined, DeleteOutlined, UnorderedListOutlined, ThunderboltOutlined, CloseOutlined, CheckOutlined, DownOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined, EditOutlined, InboxOutlined, DeleteOutlined, UnorderedListOutlined, ThunderboltOutlined, CheckOutlined, DownOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { questionsApi } from '../../../api/questions';
 import { categoriesApi } from '../../../api/categories';
