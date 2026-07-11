@@ -23,7 +23,7 @@ export function EditorLayout() {
           mode="horizontal"
           selectedKeys={[location.pathname]}
           items={navItems}
-          onClick={({ key }) => navigate(key)}
+          onClick={({ key }) => navigate({ pathname: key, search: location.search })}
           className={styles.menu}
         />
       </Header>

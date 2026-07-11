@@ -1,5 +1,6 @@
 import { Input, DatePicker, Space, Button } from 'antd';
 import { SearchOutlined, ClearOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import styles from './HistoryFilters.module.css';
 
 const { RangePicker } = DatePicker;
@@ -22,6 +23,10 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
     candidateName: '', fromDate: '', toDate: '',
   });
 
+  const rangeValue = filters.fromDate && filters.toDate
+    ? [dayjs(filters.fromDate), dayjs(filters.toDate)]
+    : null;
+
   return (
     <Space wrap className={styles.filters}>
       <Input
@@ -33,6 +38,7 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
         allowClear
       />
       <RangePicker
+        value={rangeValue}
         onChange={(_, dateStrings) => update({ fromDate: dateStrings[0], toDate: dateStrings[1] })}
         format="YYYY-MM-DD"
       />

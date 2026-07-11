@@ -65,13 +65,22 @@ export function QuestionGenerateModal({ open, onClose }: Props) {
     }
     setSaving(true);
     try {
+      let generatedTagId: number;
+      const existing = allTags.find((t: any) => t.name === 'Сгенерировано');
+      if (existing) {
+        generatedTagId = existing.id;
+      } else {
+        const created = await tagsApi.create({ name: 'Сгенерировано', color: '#873800' });
+        generatedTagId = created.id;
+        queryClient.invalidateQueries({ queryKey: ['tags'] });
+      }
       for (const q of toSave) {
         await questionsApi.create({
           text: q.text,
           expectedAnswer: q.expectedAnswer,
           categoryId: q.categoryId,
           levelId: q.levelId,
-          tagIds: q.tags.map(t => t.id),
+          tagIds: [...new Set([...q.tags.map(t => t.id), generatedTagId])],
         });
       }
       queryClient.invalidateQueries({ queryKey: ['questions'] });

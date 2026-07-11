@@ -64,10 +64,10 @@ export function CandidateCard() {
       <Modal title={editing ? 'Редактировать кандидата' : 'Новый кандидат'} width={500} open={modalOpen} onCancel={() => setModalOpen(false)} onOk={() => form.submit()}>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item name="candidateName" label="ФИО кандидата" rules={[{ required: true }]}>
-            <Input size="large" />
+            <Input size="large" maxLength={100} />
           </Form.Item>
           <Form.Item name="position" label="Должность" rules={[{ required: true }]}>
-            <Input size="large" />
+            <Input size="large" maxLength={100} />
           </Form.Item>
           <Form.Item name="level" label="Уровень" rules={[{ required: true }]}>
             <Select size="large" options={levels.map((l: any) => ({ value: l.name, label: l.name }))} />
