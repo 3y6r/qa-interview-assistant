@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { CandidateCard } from '../features/workspace/candidate/CandidateCard';
 import { SelectedQuestionsPanel } from '../features/workspace/panel/SelectedQuestionsPanel';
 import { QuestionList } from '../features/workspace/questions/QuestionList';
-import { useEditorStore } from '../stores/editorStore';
+import { useEditorStore, ACTIVE_TOKEN_KEY } from '../stores/editorStore';
 import { interviewsApi } from '../api/interviews';
 import dayjs from 'dayjs';
 import styles from './WorkspacePage.module.css';
@@ -14,14 +14,13 @@ export function WorkspacePage() {
   const { candidate, selectedQuestions, scores, reset, restoreSession } = useEditorStore();
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get('s');
-    if (token) {
-      restoreSession(token);
-    } else {
-      const newToken = useEditorStore.getState().sessionToken;
-      const url = `${location.pathname}?s=${newToken}${location.hash}`;
-      window.history.replaceState(null, '', url);
+    const entries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+    const navType = entries.length > 0 ? entries[0].type : 'navigate';
+    if (navType === 'reload') {
+      const storedToken = sessionStorage.getItem(ACTIVE_TOKEN_KEY);
+      if (storedToken) {
+        restoreSession(storedToken);
+      }
     }
   }, []);
   const canStart = !!candidate && selectedQuestions.length > 0;
