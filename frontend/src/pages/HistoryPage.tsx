@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Card, Table, Tag, Typography, Modal, Descriptions, Button, Statistic, Row, Col } from 'antd';
-import { EyeOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
+import { Card, Table, Tag, Typography, Modal, Descriptions, Button, Statistic, Row, Col, Popconfirm, Tooltip, message } from 'antd';
+import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ColumnsType } from 'antd/es/table';
 import { interviewsApi } from '../api/interviews';
 import type { InterviewResult } from '../types';
@@ -30,6 +30,7 @@ type Filters = {
 };
 
 export function HistoryPage() {
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<Filters>({
     candidateName: '', fromDate: '', toDate: '',
   });
@@ -45,21 +46,38 @@ export function HistoryPage() {
     }),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => interviewsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['interview-results'] });
+      message.success('Результат удалён');
+    },
+    onError: () => message.error('Ошибка при удалении'),
+  });
+
   const results = data || [];
 
   const columns: ColumnsType<InterviewResult> = [
     {
       title: 'Кандидат', dataIndex: 'candidateFullName', key: 'candidateFullName', width: 180,
+      className: styles.centeredHeader,
+      onHeaderCell: () => ({ style: { textAlign: 'center' } }),
     },
     {
       title: 'Должность', dataIndex: 'position', key: 'position', width: 180,
+      className: styles.centeredHeader,
+      onHeaderCell: () => ({ style: { textAlign: 'center' } }),
     },
     {
       title: 'Средний балл', dataIndex: 'averageScore', key: 'averageScore', width: 120,
+      className: styles.centeredHeader,
+      onHeaderCell: () => ({ style: { textAlign: 'center' } }),
       render: (score) => score.toFixed(1),
     },
     {
       title: 'Оценка', key: 'grade', width: 140,
+      className: styles.centeredHeader,
+      onHeaderCell: () => ({ style: { textAlign: 'center' } }),
       render: (_, record) => {
         const grade = getGrade(record.averageScore);
         const g = GRADE_MAP[grade];
@@ -68,17 +86,30 @@ export function HistoryPage() {
     },
     {
       title: 'Дата интервью', dataIndex: 'interviewDate', key: 'interviewDate', width: 130,
+      className: styles.centeredHeader,
+      onHeaderCell: () => ({ style: { textAlign: 'center' } }),
       render: (val) => val,
     },
     {
-      title: '', key: 'actions', width: 60,
+      title: 'Действие', key: 'actions', width: 100,
+      className: styles.centeredHeader,
+      onHeaderCell: () => ({ style: { textAlign: 'center' } }),
       render: (_, record) => (
-        <Button
-          type="link"
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => setSelectedResult(record)}
-        />
+        <span style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+          <Tooltip title="Просмотреть">
+            <Button
+              type="link"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => setSelectedResult(record)}
+            />
+          </Tooltip>
+          <Popconfirm title="Удалить результат?" onConfirm={() => deleteMutation.mutate(record.id)}>
+            <Tooltip title="Удалить">
+              <Button type="link" size="small" danger icon={<DeleteOutlined />} />
+            </Tooltip>
+          </Popconfirm>
+        </span>
       ),
     },
   ];

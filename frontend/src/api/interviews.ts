@@ -26,4 +26,7 @@ export const interviewsApi = {
 
   list: (filters?: InterviewResultFilters) =>
     client.get<InterviewResult[]>('/interview-results', { params: filters }).then((r) => r.data),
+
+  delete: (id: number) =>
+    client.delete(`/interview-results/${id}`).then((r) => r.data),
 };

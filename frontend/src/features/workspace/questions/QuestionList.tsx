@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { Card, Input, Select, Space, Button, List, Tag, Empty, message, Popconfirm, Tooltip } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined, InboxOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Card, Input, Select, Space, Button, List, Tag, Empty, message, Popconfirm, Tooltip, Dropdown } from 'antd';
+import { PlusOutlined, SearchOutlined, EditOutlined, InboxOutlined, DeleteOutlined, UnorderedListOutlined, ThunderboltOutlined, CheckOutlined, DownOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { questionsApi } from '../../../api/questions';
 import { categoriesApi } from '../../../api/categories';
@@ -9,6 +9,7 @@ import { levelsApi } from '../../../api/levels';
 import { useEditorStore } from '../../../stores/editorStore';
 import { LEVELS_QUERY_KEY } from '../../../utils/constants';
 import { QuestionFormModal } from './QuestionFormModal';
+import { QuestionGenerateModal } from './QuestionGenerateModal';
 import type { Question } from '../../../types';
 import styles from './QuestionList.module.css';
 
@@ -20,6 +21,8 @@ export function QuestionList() {
   const [levelId, setLevelId] = useState<number | undefined>();
   const [tagIds, setTagIds] = useState<number[] | undefined>();
   const [formModal, setFormModal] = useState<{ open: boolean; question: Question | null }>({ open: false, question: null });
+  const [showArchived, setShowArchived] = useState(false);
+  const [generateOpen, setGenerateOpen] = useState(false);
 
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list });
   const { data: allTags = [] } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.list });
@@ -36,9 +39,9 @@ export function QuestionList() {
     hasNextPage,
     fetchNextPage,
   } = useInfiniteQuery({
-    queryKey: ['questions', text, categoryId, levelId, tagIds],
+    queryKey: ['questions', text, categoryId, levelId, tagIds, showArchived],
     queryFn: ({ pageParam = 0 }) =>
-      questionsApi.list({ text: text || undefined, categoryId, levelId, tagIds, isArchived: false, limit: LIMIT, offset: pageParam }),
+      questionsApi.list({ text: text || undefined, categoryId, levelId, tagIds, isArchived: showArchived, limit: LIMIT, offset: pageParam }),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length < LIMIT ? undefined : allPages.length * LIMIT;
@@ -74,6 +77,14 @@ export function QuestionList() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['questions'] });
       message.success('Вопрос архивирован');
+    },
+  });
+
+  const unarchiveMutation = useMutation({
+    mutationFn: (id: number) => questionsApi.unarchive(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+      message.success('Вопрос восстановлен из архива');
     },
   });
 
@@ -188,16 +199,80 @@ export function QuestionList() {
             className={styles.filterLevel}
             options={levels.map((l: any) => ({ value: l.id, label: l.name }))}
           />
-          <Select
-            mode="multiple"
-            placeholder="Теги"
-            value={tagIds}
-            onChange={setTagIds}
-            allowClear
-            className={styles.filterTags}
-            options={allTags.map((t: any) => ({ value: t.id, label: t.name }))}
-          />
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setFormModal({ open: true, question: null })} className={styles.createBtn}>
+          <Dropdown
+            trigger={['click']}
+            placement="bottomLeft"
+            dropdownRender={() => (
+              <div className={styles.tagsDropdown}>
+                {allTags.map((tag: any) => {
+                  const selected = tagIds?.includes(tag.id);
+                  return (
+                    <div
+                      key={tag.id}
+                      className={`${styles.tagOption} ${selected ? styles.tagOptionSelected : ''}`}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setTagIds((prev) => {
+                          if (prev?.includes(tag.id)) {
+                            const next = prev.filter((id) => id !== tag.id);
+                            return next.length ? next : undefined;
+                          }
+                          return [...(prev || []), tag.id];
+                        });
+                      }}
+                    >
+                      <span className={styles.tagOptionCheck}>
+                        {selected && <CheckOutlined />}
+                      </span>
+                      <Tag color={tag.color || '#108ee9'} className={styles.tagOptionTag}>
+                        {tag.name}
+                      </Tag>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          >
+            <div className={styles.customSelect}>
+              <div className={styles.tagsScrollContainer}>
+                {tagIds && tagIds.length > 0 ? (
+                  tagIds.map((id) => {
+                    const tag = allTags.find((t: any) => t.id === id);
+                    if (!tag) return null;
+                    return (
+                      <Tag
+                        key={id}
+                        closable
+                        onClose={(e) => {
+                          e.stopPropagation();
+                          setTagIds((prev) => {
+                            const next = prev?.filter((t) => t !== id);
+                            return next?.length ? next : undefined;
+                          });
+                        }}
+                        className={styles.tagChip}
+                        color={tag.color || '#108ee9'}
+                      >
+                        {tag.name}
+                      </Tag>
+                    );
+                  })
+                ) : (
+                  <span className={styles.placeholder}>Теги</span>
+                )}
+              </div>
+              <span className={styles.selectArrow}><DownOutlined /></span>
+            </div>
+          </Dropdown>
+
+          <div style={{ flex: 1 }} />
+          <Button icon={<UnorderedListOutlined />} onClick={() => setShowArchived(v => !v)} type={showArchived ? 'primary' : 'default'}>
+            Архив
+          </Button>
+          <Button icon={<ThunderboltOutlined />} onClick={() => setGenerateOpen(true)}>
+            AI
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setFormModal({ open: true, question: null })}>
             Создать
           </Button>
         </div>
@@ -226,11 +301,19 @@ export function QuestionList() {
                       <Tooltip key="edit" title="Редактировать">
                         <Button type="link" icon={<EditOutlined />} onClick={() => setFormModal({ open: true, question: q })} />
                       </Tooltip>,
-                      <Popconfirm key="archive" title="Архивировать вопрос?" onConfirm={() => archiveMutation.mutate(q.id)}>
-                        <Tooltip title="Архивировать">
-                          <Button type="link" icon={<InboxOutlined />} />
-                        </Tooltip>
-                      </Popconfirm>,
+                      (showArchived ? (
+                        <Popconfirm key="unarchive" title="Восстановить вопрос?" onConfirm={() => unarchiveMutation.mutate(q.id)}>
+                          <Tooltip title="Восстановить из архива">
+                            <Button type="link" icon={<InboxOutlined />} />
+                          </Tooltip>
+                        </Popconfirm>
+                      ) : (
+                        <Popconfirm key="archive" title="Архивировать вопрос?" onConfirm={() => archiveMutation.mutate(q.id)}>
+                          <Tooltip title="Архивировать">
+                            <Button type="link" icon={<InboxOutlined />} />
+                          </Tooltip>
+                        </Popconfirm>
+                      )),
                       <Popconfirm key="delete" title="Удалить вопрос?" onConfirm={() => deleteMutation.mutate(q.id)}>
                         <Tooltip title="Удалить">
                           <Button type="link" danger icon={<DeleteOutlined />} />
@@ -240,9 +323,7 @@ export function QuestionList() {
                   >
                     <List.Item.Meta
                       title={
-                        <Space>
-                          <span>{q.text}</span>
-                        </Space>
+                        <span className={styles.questionText}>{q.text}</span>
                       }
                       description={
                         <Space size={4} wrap>
@@ -272,6 +353,10 @@ export function QuestionList() {
         onClose={() => setFormModal({ open: false, question: null })}
         onSubmit={handleFormSubmit}
         loading={createMutation.isPending || updateMutation.isPending}
+      />
+      <QuestionGenerateModal
+        open={generateOpen}
+        onClose={() => setGenerateOpen(false)}
       />
     </>
   );

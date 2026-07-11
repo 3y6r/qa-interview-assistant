@@ -12,4 +12,7 @@ export const categoriesApi = {
 
   archive: (id: number) =>
     client.put<Category>(`/categories/${id}`, { is_archived: true }).then((r) => r.data),
+
+  unarchive: (id: number) =>
+    client.patch<Category>(`/categories/${id}/unarchive`).then((r) => r.data),
 };

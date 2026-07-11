@@ -27,6 +27,17 @@ export const questionsApi = {
   archive: (id: number) =>
     client.patch<{ id: number; isArchived: boolean }>(`/questions/${id}/archive`).then((r) => r.data),
 
+  unarchive: (id: number) =>
+    client.patch<{ id: number; isArchived: boolean }>(`/questions/${id}/unarchive`).then((r) => r.data),
+
   delete: (id: number) =>
     client.delete(`/questions/${id}`).then((r) => r.data),
+
+  generate: (data: {
+    categoryId: number;
+    levelId: number;
+    tagIds?: number[];
+    numQuestions: number;
+    additionalText?: string;
+  }) => client.post<{ questions: any[] }>('/questions/generate', data).then((r) => r.data),
 };
