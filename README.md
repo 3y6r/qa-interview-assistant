@@ -33,6 +33,7 @@ npm install && npm run dev
 Краткий запуск:
 
 ```powershell
+cd qa-interview-assistant
 cd backend
 poetry install
 poetry run uvicorn app.main:app --reload
