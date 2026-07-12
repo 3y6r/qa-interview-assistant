@@ -204,7 +204,7 @@ export function QuestionList() {
             placement="bottomLeft"
             dropdownRender={() => (
               <div className={styles.tagsDropdown}>
-                {allTags.map((tag: any) => {
+                {allTags.filter((tag: any) => !tag.isArchived).map((tag: any) => {
                   const selected = tagIds?.includes(tag.id);
                   return (
                     <div
@@ -329,7 +329,7 @@ export function QuestionList() {
                         <Space size={4} wrap>
                           {cat && <Tag>{cat.name}</Tag>}
                           {levelName && <Tag color="blue">{levelName}</Tag>}
-                          {q.tags.map(t => <Tag key={t.id} color={t.color || '#108ee9'}>{t.name}</Tag>)}
+                          {q.tags.filter((t: any) => !t.isArchived).map(t => <Tag key={t.id} color={t.color || '#108ee9'}>{t.name}</Tag>)}
                         </Space>
                       }
                     />

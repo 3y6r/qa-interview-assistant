@@ -37,7 +37,7 @@ function QuestionCard({ q, index }: { q: Question; index: number }) {
           <div className={styles.tagsRow}>
             {cat && <Tag className={styles.tag}>{cat.name}</Tag>}
             {levelName && <Tag color="blue" className={styles.tag}>{levelName}</Tag>}
-            {q.tags.map(t => <Tag key={t.id} color={t.color || '#108ee9'} className={styles.tag}>{t.name}</Tag>)}
+            {q.tags.filter((t: any) => !t.isArchived).map(t => <Tag key={t.id} color={t.color || '#108ee9'} className={styles.tag}>{t.name}</Tag>)}
           </div>
           <div className={styles.ratingRow}>
             <div className={styles.rating}>

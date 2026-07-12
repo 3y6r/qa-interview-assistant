@@ -12,8 +12,13 @@ export interface QuestionFilters {
 }
 
 export const questionsApi = {
-  list: (filters?: QuestionFilters) =>
-    client.get<Question[]>('/questions', { params: filters }).then((r) => r.data),
+  list: (filters?: QuestionFilters) => {
+    const params = filters ? { ...filters } : undefined;
+    if (params?.tagIds) {
+      params.tagIds = params.tagIds.join(',') as any;
+    }
+    return client.get<Question[]>('/questions', { params }).then((r) => r.data);
+  },
 
   getById: (id: number) =>
     client.get<Question>(`/questions/${id}`).then((r) => r.data),
