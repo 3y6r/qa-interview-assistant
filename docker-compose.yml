@@ -25,7 +25,9 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://qa_user:qa_password@db:5432/qa_interview_db}
-      AI_API_KEY: ${AI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.1-flash-lite}
+      GEMINI_TIMEOUT_SECONDS: ${GEMINI_TIMEOUT_SECONDS:-60}
     ports:
       - "8000:8000"
     depends_on:
