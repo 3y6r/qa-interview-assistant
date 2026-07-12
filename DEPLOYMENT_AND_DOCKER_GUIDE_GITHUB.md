@@ -1,18 +1,25 @@
-# QA Interview Assistant — запуск через Docker и деплой на VPS
+# QA Interview Assistant — Docker, PostgreSQL и развёртывание на VPS
 
-Документ описывает локальный запуск проекта через Docker Compose, работу с PostgreSQL, наполнение базы тестовыми данными и production-развёртывание на VPS.
+> Актуализировано: 13 июля 2026 года  
+> Актуальная ветка инфраструктуры: `feature/PB-7-PB-9-postgresql-docker`
 
-## 1. Состав проекта
+Документ описывает текущую Docker-архитектуру QA Interview Assistant, локальный запуск, production-развёртывание на VPS, работу с PostgreSQL, подключение pgAdmin, загрузку тестовых данных, резервное копирование и обслуживание базы.
 
-Проект состоит из трёх основных частей:
+---
+
+## 1. Актуальная архитектура проекта
+
+Проект состоит из трёх основных сервисов:
 
 ```text
-frontend    — React / Vite / TypeScript приложение
-backend     — FastAPI приложение
-PostgreSQL  — база данных проекта
+Frontend   — React 19 + TypeScript + Vite + Ant Design
+Backend    — FastAPI + SQLAlchemy 2 + Python 3.12
+Database   — PostgreSQL 16
 ```
 
-В локальном Docker-окружении обычно используются контейнеры:
+AI-генерация вопросов выполняется на backend через Gemini API.
+
+### 1.1. Локальные контейнеры
 
 ```text
 qa_interview_frontend
@@ -20,7 +27,7 @@ qa_interview_backend
 qa_interview_postgres
 ```
 
-В production-окружении на VPS обычно используются контейнеры:
+### 1.2. Production-контейнеры
 
 ```text
 qa_interview_frontend_prod
@@ -28,45 +35,195 @@ qa_interview_backend_prod
 qa_interview_postgres_prod
 ```
 
-Основная таблица с историей завершённых собеседований:
+### 1.3. Production-схема
 
 ```text
+Браузер
+   ↓
+http://<SERVER_IP>:8080
+   ↓
+Nginx внутри frontend-контейнера
+   ├── статические файлы React
+   └── /api/* → backend:8000
+                       ↓
+                 PostgreSQL:5432
+```
+
+В production:
+
+- наружу публикуется только frontend;
+- backend доступен только внутри Docker-сети;
+- PostgreSQL доступен контейнерам по `db:5432`;
+- для pgAdmin PostgreSQL привязан только к `127.0.0.1:15432` на VPS;
+- Docker-логи ограничены до трёх файлов по 10 МБ на контейнер;
+- backend и PostgreSQL имеют healthcheck.
+
+---
+
+## 2. Структура репозитория
+
+Актуальная структура:
+
+```text
+qa-interview-assistant/
+├── backend/
+│   ├── app/
+│   ├── tests/
+│   ├── Dockerfile
+│   ├── pyproject.toml
+│   └── poetry.lock
+├── frontend/
+│   ├── src/
+│   ├── Dockerfile
+│   ├── Dockerfile.prod
+│   ├── nginx.conf
+│   ├── package.json
+│   └── package-lock.json
+├── deploy/
+│   ├── scripts/
+│   │   └── qa-category-cleanup.sh
+│   └── systemd/
+│       ├── qa-category-cleanup.service
+│       └── qa-category-cleanup.timer
+├── sql/
+│   └── cleanup_unused_archived_categories.sql
+├── seed_mock_data.sql
+├── docker-compose.yml
+├── docker-compose.prod.yml
+├── .env.example
+├── .gitignore
+└── README.md
+```
+
+В репозитории не должно быть:
+
+```text
+.env
+дампов PostgreSQL
+реальных данных кандидатов
+Gemini API key
+паролей
+node_modules
+.venv
+dist
+Docker volumes
+серверных экспортов
+```
+
+---
+
+## 3. Актуальная модель данных
+
+Основные таблицы:
+
+```text
+levels
+categories
+tags
+questions
+question_tags
 interview_results
 ```
 
-В ней хранится минимальный итог интервью:
+### 3.1. Уровни
+
+При запуске backend автоматически создаются:
 
 ```text
-candidate_full_name  — ФИО кандидата
-interview_date       — дата собеседования
-average_score        — средний балл
-comment              — общий комментарий
+Trainee
+Junior
+Middle
+Senior
+Lead
 ```
 
-## 2. Переменные окружения
+### 3.2. Категории
 
-В корне проекта должен быть файл `.env`.
+Таблица `categories` содержит:
 
-Пример для локального запуска:
-
-```env
-POSTGRES_DB=qa_interview_db
-POSTGRES_USER=qa_user
-POSTGRES_PASSWORD=qa_password
-
-DATABASE_URL=postgresql+psycopg://qa_user:qa_password@db:5432/qa_interview_db
-
-BACKEND_PORT=8000
-FRONTEND_PORT=3001
-
-VITE_API_BASE_URL=http://localhost:8000/api
-
-AI_API_KEY=
+```text
+id
+name
+is_archived
+created_at
 ```
 
-Для GitHub нужно хранить только `.env.example`, а реальный `.env` добавлять в `.gitignore`.
+Удаление категории в пользовательском интерфейсе является логическим: категория архивируется через `is_archived = true`.
 
-Пример `.env.example`:
+### 3.3. Теги
+
+Таблица `tags` содержит:
+
+```text
+id
+name
+color
+is_archived
+created_at
+```
+
+Связь вопросов и тегов — многие-ко-многим через `question_tags`.
+
+### 3.4. Вопросы
+
+Таблица `questions` содержит:
+
+```text
+id
+text
+expected_answer
+category_id
+level_id
+is_archived
+created_at
+updated_at
+```
+
+### 3.5. Результаты интервью
+
+Таблица `interview_results` содержит:
+
+```text
+id
+candidate_full_name
+position
+interview_date
+average_score
+comment
+created_at
+```
+
+Backend сохраняет итог интервью, а не промежуточный процесс его прохождения.
+
+---
+
+## 4. Инициализация схемы базы
+
+Alembic в текущей версии не используется.
+
+При запуске FastAPI выполняются:
+
+```python
+Base.metadata.create_all(bind=engine)
+sync_schema()
+seed_levels(db)
+```
+
+Это означает:
+
+1. отсутствующие таблицы создаются автоматически;
+2. отдельные недостающие колонки добавляются через `sync_schema()`;
+3. стандартные уровни добавляются автоматически.
+
+`create_all()` не заменяет полноценную систему миграций. При дальнейшем развитии схемы рекомендуется подключить Alembic.
+
+---
+
+## 5. Переменные окружения
+
+В корне проекта создаётся `.env` на основе `.env.example`.
+
+### 5.1. Актуальный `.env.example`
 
 ```env
 POSTGRES_DB=qa_interview_db
@@ -80,24 +237,62 @@ FRONTEND_PORT=3001
 
 VITE_API_BASE_URL=http://localhost:8000/api
 
-AI_API_KEY=
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-3.5-flash
+GEMINI_TIMEOUT_SECONDS=60
 ```
 
-На VPS пароль от PostgreSQL должен быть сложным. Не используйте `qa_password` в production.
+Для production обычно используется:
 
-## 3. Локальный запуск через Docker
+```env
+POSTGRES_DB=qa_interview_db
+POSTGRES_USER=qa_user
+POSTGRES_PASSWORD=<СЛОЖНЫЙ_ПАРОЛЬ>
 
-### 3.1. Требования
+FRONTEND_PORT=8080
 
-Для локального запуска нужны:
+GEMINI_API_KEY=<GEMINI_API_KEY>
+GEMINI_MODEL=gemini-3.1-flash-lite
+GEMINI_TIMEOUT_SECONDS=60
+```
+
+### 5.2. Важное замечание
+
+Backend использует именно:
+
+```text
+GEMINI_API_KEY
+```
+
+Переменная:
+
+```text
+AI_API_KEY
+```
+
+устарела и не должна использоваться в `.env`, `.env.example` и Docker Compose.
+
+### 5.3. Защита `.env`
+
+```bash
+chmod 600 .env
+```
+
+Нельзя выводить `.env` в публичный лог, демонстрировать его на экране или загружать в GitHub.
+
+---
+
+## 6. Локальный запуск через Docker Compose
+
+### 6.1. Требования
 
 ```text
 Docker Desktop
-Docker Compose
+Docker Compose v2
 Git
 ```
 
-На Windows Docker Desktop должен быть запущен до выполнения команд.
+На Windows Docker Desktop должен быть запущен.
 
 Проверка:
 
@@ -106,61 +301,55 @@ docker --version
 docker compose version
 ```
 
-### 3.2. Запуск проекта
+### 6.2. Подготовка
 
-Перейдите в корень проекта:
+Перейдите в корень репозитория:
 
 ```bash
 cd <PROJECT_DIR>
 ```
 
-Запустите контейнеры:
+Создайте `.env`:
 
 ```bash
-docker compose up --build -d
+cp .env.example .env
 ```
 
-Проверьте статус:
+В Windows CMD:
+
+```cmd
+copy .env.example .env
+```
+
+Проверьте Compose:
 
 ```bash
-docker compose ps
+docker compose --env-file .env -f docker-compose.yml config
 ```
 
-Ожидаемый результат:
+### 6.3. Сборка и запуск
 
-```text
-qa_interview_frontend   Up
-qa_interview_backend    Up
-qa_interview_postgres   Up healthy
+```bash
+docker compose --env-file .env -f docker-compose.yml up --build -d
 ```
 
-### 3.3. Локальные адреса
+Проверка:
 
-Обычно приложение доступно по адресам:
+```bash
+docker compose --env-file .env -f docker-compose.yml ps
+```
+
+### 6.4. Локальные адреса
 
 ```text
 Frontend:        http://localhost:3001
 Backend Swagger: http://localhost:8000/docs
+OpenAPI:         http://localhost:8000/openapi.json
 API health:      http://localhost:8000/api/health
+PostgreSQL:      127.0.0.1:15432
 ```
 
-PostgreSQL не открывается в браузере. Для подключения к базе используется `psql`, pgAdmin или другой SQL-клиент.
-
-Внешний порт PostgreSQL зависит от `docker-compose.yml`. Его можно посмотреть командой:
-
-```bash
-docker compose ps
-```
-
-Пример:
-
-```text
-0.0.0.0:15432->5432/tcp
-```
-
-В этом случае внешний порт для pgAdmin — `15432`.
-
-### 3.4. Логи контейнеров
+### 6.5. Логи
 
 ```bash
 docker compose logs frontend
@@ -168,183 +357,99 @@ docker compose logs backend
 docker compose logs db
 ```
 
-Последние строки логов backend:
+Последние 100 строк backend:
 
 ```bash
 docker compose logs --tail=100 backend
 ```
 
-### 3.5. Остановка проекта
+Следить за логами:
 
-Остановить контейнеры без удаления данных:
+```bash
+docker compose logs -f backend
+```
+
+### 6.6. Остановка
+
+Без удаления базы:
 
 ```bash
 docker compose down
 ```
 
-Остановить контейнеры и удалить volume PostgreSQL:
+С удалением PostgreSQL volume:
 
 ```bash
 docker compose down -v
 ```
 
-Команда `down -v` удаляет данные базы. Используйте её только если точно нужно пересоздать PostgreSQL с нуля.
+> `down -v` полностью удаляет данные локальной базы. Используйте только при намеренном пересоздании БД.
 
-## 4. Работа с PostgreSQL локально
+---
 
-### 4.1. Подключение через терминал
+## 7. Запуск без Docker
 
-```bash
-docker exec -it qa_interview_postgres psql -U qa_user -d qa_interview_db
-```
+### 7.1. Backend
 
-Полезные команды внутри `psql`:
-
-```sql
-\dt
-SELECT * FROM levels;
-SELECT * FROM categories;
-SELECT * FROM tags;
-SELECT * FROM questions;
-SELECT * FROM interview_results;
-\q
-```
-
-### 4.2. Подключение через pgAdmin
-
-Создайте новое подключение:
+Требования:
 
 ```text
-Servers → Register → Server...
+Python 3.12
+Poetry
 ```
 
-Вкладка `General`:
-
-```text
-Name: QA Interview Local
-```
-
-Вкладка `Connection`:
-
-```text
-Host name/address: 127.0.0.1
-Port: <POSTGRES_EXTERNAL_PORT>
-Maintenance database: qa_interview_db
-Username: qa_user
-Password: <POSTGRES_PASSWORD>
-```
-
-`POSTGRES_EXTERNAL_PORT` берётся из `docker compose ps`.
-
-## 5. Наполнение базы тестовыми данными
-
-Если после запуска приложение открывается, но в таблице нет вопросов, значит PostgreSQL пустой.
-
-Для первичного наполнения используется файл:
-
-```text
-seed_mock_data.sql
-```
-
-Запуск seed-файла локально:
+Запуск:
 
 ```bash
-docker exec -i qa_interview_postgres psql -U qa_user -d qa_interview_db < seed_mock_data.sql
+cd backend
+poetry install
+poetry run uvicorn app.main:app --reload
 ```
 
-Проверка количества вопросов:
-
-```bash
-docker exec -it qa_interview_postgres psql -U qa_user -d qa_interview_db -c "SELECT COUNT(*) FROM questions;"
-```
-
-Проверка данных:
-
-```bash
-docker exec -it qa_interview_postgres psql -U qa_user -d qa_interview_db -c "SELECT q.id, q.text, c.name AS category, l.name AS level FROM questions q JOIN categories c ON c.id = q.category_id JOIN levels l ON l.id = q.level_id ORDER BY q.id;"
-```
-
-После загрузки данных обновите страницу frontend через `Ctrl + F5`.
-
-## 6. Production-запуск на VPS
-
-### 6.1. Схема работы
-
-В production-окружении frontend отдаётся через Nginx-контейнер, а все запросы `/api/...` проксируются на backend:
+По умолчанию без `DATABASE_URL` backend использует:
 
 ```text
-Browser
-  ↓
-http://<SERVER_IP>:8080
-  ↓
-frontend nginx container
-  ↓
-/api/... → backend FastAPI
-  ↓
-PostgreSQL
+sqlite:///./app.db
 ```
 
-PostgreSQL не должен быть открыт в интернет.
+Для PostgreSQL задайте `DATABASE_URL`.
 
-### 6.2. Проверка сервера
+PowerShell:
 
-Подключитесь к VPS:
-
-```bash 
-ssh <SSH_USER>@<SERVER_IP>
+```powershell
+$env:DATABASE_URL="postgresql+psycopg://qa_user:qa_password@localhost:15432/qa_interview_db"
+poetry run uvicorn app.main:app --reload
 ```
 
-Проверьте ОС:
+### 7.2. Frontend
 
 ```bash
-cat /etc/os-release
+cd frontend
+npm ci
+npm run dev
 ```
 
-Проверьте занятые порты:
-
-```bash
-ss -tulpn | grep -E ':80|:443|:3001|:8000|:5432|:51820|:8080'
-```
-
-Если на сервере уже работает VPN или другой сервис, не используйте занятые им порты.
-
-### 6.3. Рекомендуемый путь проекта
+Frontend:
 
 ```text
-/opt/qa-interview-assistant
+http://localhost:3001
 ```
 
-Перейти в проект:
+---
 
-```bash
-cd /opt/qa-interview-assistant
-```
+## 8. Production Docker Compose
 
-### 6.4. Production `.env`
-
-На VPS в корне проекта создайте `.env`:
-
-```env
-POSTGRES_DB=qa_interview_db
-POSTGRES_USER=qa_user
-POSTGRES_PASSWORD=change_me_strong_password
-
-AI_API_KEY=
-```
-
-Не добавляйте production `.env` в GitHub.
-
-### 6.5. Production Docker Compose
-
-Для production-запуска используется файл:
-
-```text
-docker-compose.prod.yml
-```
-
-Пример:
+Актуальная production-конфигурация:
 
 ```yaml
+name: qa_interview_assistant
+
+x-default-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   db:
     image: postgres:16-alpine
@@ -354,26 +459,48 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:15432:5432"
     volumes:
       - qa_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 12
+    logging: *default-logging
+    stop_grace_period: 30s
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: qa-interview-assistant-backend:latest
     container_name: qa_interview_backend_prod
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      AI_API_KEY: ${AI_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash}
+      GEMINI_TIMEOUT_SECONDS: ${GEMINI_TIMEOUT_SECONDS:-60}
     depends_on:
       db:
         condition: service_healthy
+    expose:
+      - "8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    logging: *default-logging
 
   frontend:
     build:
@@ -381,18 +508,43 @@ services:
       dockerfile: Dockerfile.prod
       args:
         VITE_API_BASE_URL: /api
+    image: qa-interview-assistant-frontend:latest
     container_name: qa_interview_frontend_prod
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "${FRONTEND_PORT:-8080}:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    logging: *default-logging
 
 volumes:
   qa_postgres_data:
 ```
 
-### 6.6. Production Dockerfile frontend
+---
+
+## 9. Production Dockerfile
+
+### 9.1. Backend
+
+Файл:
+
+```text
+backend/Dockerfile
+```
+
+Используется:
+
+- Python 3.12 slim;
+- Poetry 2.4.1;
+- непривилегированный пользователь `appuser`;
+- Uvicorn на порту `8000`;
+- драйвер `psycopg`.
+
+Сейчас `psycopg` устанавливается в Dockerfile отдельной командой. Для полной согласованности зависимостей рекомендуется добавить его также в `backend/pyproject.toml`.
+
+### 9.2. Frontend
 
 Файл:
 
@@ -400,32 +552,15 @@ volumes:
 frontend/Dockerfile.prod
 ```
 
-Пример:
+Production-сборка выполняется на Node.js 22, после чего файлы передаются Nginx.
 
 ```dockerfile
-FROM node:20-alpine AS build
-
-WORKDIR /app
-
-ARG VITE_API_BASE_URL=/api
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-RUN npm run build
-
-
-FROM nginx:alpine
-
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist /usr/share/nginx/html
-
-EXPOSE 80
+FROM node:22-alpine AS build
 ```
 
-### 6.7. Nginx-конфигурация frontend
+Frontend-контейнер содержит собственный healthcheck.
+
+### 9.3. Nginx
 
 Файл:
 
@@ -433,207 +568,297 @@ EXPOSE 80
 frontend/nginx.conf
 ```
 
-Пример:
+Ключевая маршрутизация:
 
 ```nginx
-server {
-    listen 80;
-    server_name _;
-
-    root /usr/share/nginx/html;
-    index index.html;
-
-    location /api/ {
-        proxy_pass http://backend:8000/api/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    location /docs {
-        proxy_pass http://backend:8000/docs;
-        proxy_set_header Host $host;
-    }
-
-    location /openapi.json {
-        proxy_pass http://backend:8000/openapi.json;
-        proxy_set_header Host $host;
-    }
-
-    location / {
-        try_files $uri /index.html;
-    }
+location /api/ {
+    proxy_pass http://backend:8000;
 }
 ```
 
-### 6.8. Запуск на VPS
+SPA-маршруты обслуживаются через:
 
-```bash
-cd /opt/qa-interview-assistant
-docker compose -f docker-compose.prod.yml up --build -d
+```nginx
+location / {
+    try_files $uri $uri/ /index.html;
+}
 ```
 
-Проверка:
+---
+
+## 10. Первичное развёртывание на VPS
+
+### 10.1. Подключение
 
 ```bash
-docker compose -f docker-compose.prod.yml ps
+ssh <SSH_USER>@<SERVER_IP>
 ```
 
-или:
+### 10.2. Актуальный каталог проекта
+
+На текущем VPS проект размещён в:
+
+```text
+/opt/qa-interview-assistant-develop
+```
+
+Перейдите в него:
 
 ```bash
-docker ps
+cd /opt/qa-interview-assistant-develop
+```
+
+### 10.3. Проверка файлов
+
+```bash
+ls -lh \
+  docker-compose.prod.yml \
+  backend/Dockerfile \
+  frontend/Dockerfile.prod \
+  frontend/nginx.conf
+```
+
+### 10.4. Создание `.env`
+
+```bash
+cp .env.example .env
+nano .env
+chmod 600 .env
+```
+
+В production обязательно замените:
+
+```text
+POSTGRES_PASSWORD
+GEMINI_API_KEY
+```
+
+### 10.5. Проверка Compose
+
+```bash
+docker compose \
+  --env-file .env \
+  -f docker-compose.prod.yml \
+  config >/dev/null && echo "Compose OK"
+```
+
+### 10.6. Сборка
+
+```bash
+docker compose \
+  --env-file .env \
+  -f docker-compose.prod.yml \
+  build --pull --no-cache
+```
+
+### 10.7. Запуск
+
+```bash
+docker compose \
+  --env-file .env \
+  -f docker-compose.prod.yml \
+  up -d --force-recreate
+```
+
+### 10.8. Проверка
+
+```bash
+docker compose \
+  --env-file .env \
+  -f docker-compose.prod.yml \
+  ps
 ```
 
 Ожидаемые контейнеры:
 
 ```text
-qa_interview_frontend_prod
-qa_interview_backend_prod
 qa_interview_postgres_prod
+qa_interview_backend_prod
+qa_interview_frontend_prod
 ```
 
-### 6.9. Адреса на VPS
+PostgreSQL и backend должны иметь статус `healthy`.
+
+---
+
+## 11. Проверка production после запуска
+
+### 11.1. Проверка API
+
+На VPS:
+
+```bash
+curl -sS http://127.0.0.1:8080/api/health
+```
+
+Ожидаемый ответ:
+
+```json
+{"status":"ok"}
+```
+
+### 11.2. Проверка frontend
+
+```bash
+curl -I http://127.0.0.1:8080/
+```
+
+Ожидается:
 
 ```text
-Frontend:        http://<SERVER_IP>:8080
-Backend Swagger: http://<SERVER_IP>:8080/docs
-API health:      http://<SERVER_IP>:8080/api/health
+HTTP/1.1 200 OK
 ```
 
-Backend и PostgreSQL напрямую наружу не открываются.
-
-### 6.10. Логи на VPS
-
-```bash
-docker compose -f docker-compose.prod.yml logs frontend
-docker compose -f docker-compose.prod.yml logs backend
-docker compose -f docker-compose.prod.yml logs db
-```
-
-Последние строки backend:
-
-```bash
-docker compose -f docker-compose.prod.yml logs --tail=100 backend
-```
-
-### 6.11. Перезапуск production
-
-Пересобрать и запустить заново:
-
-```bash
-docker compose -f docker-compose.prod.yml down
-docker compose -f docker-compose.prod.yml up --build -d
-```
-
-Перезапустить без пересборки:
-
-```bash
-docker compose -f docker-compose.prod.yml restart
-```
-
-## 7. База данных на VPS
-
-### 7.1. Где хранится база
-
-PostgreSQL на VPS хранит данные в Docker volume.
-
-Посмотреть volumes:
-
-```bash
-docker volume ls
-```
-
-Проверить, какой volume подключён к production-контейнеру:
-
-```bash
-docker inspect qa_interview_postgres_prod --format '{{ range .Mounts }}{{ .Name }} -> {{ .Destination }}{{ println }}{{ end }}'
-```
-
-Ожидаемый destination:
+### 11.3. Адрес сайта
 
 ```text
-/var/lib/postgresql/data
+http://<SERVER_IP>:8080
 ```
 
-### 7.2. Подключение к PostgreSQL на VPS через терминал
+### 11.4. Проверка портов
 
 ```bash
-docker exec -it qa_interview_postgres_prod psql -U qa_user -d qa_interview_db
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 ```
 
-Проверить историю собеседований:
+Ожидаемо:
 
-```sql
-SELECT id, candidate_full_name, interview_date, average_score, comment, created_at
-FROM interview_results
-ORDER BY id DESC;
+```text
+qa_interview_frontend_prod   0.0.0.0:8080->80/tcp
+qa_interview_backend_prod    8000/tcp
+qa_interview_postgres_prod   127.0.0.1:15432->5432/tcp
 ```
 
-Очистить историю собеседований:
+Backend не должен иметь внешний mapping вида:
 
-```sql
-TRUNCATE TABLE interview_results RESTART IDENTITY;
+```text
+0.0.0.0:8000->8000/tcp
 ```
 
-Выйти:
+PostgreSQL не должен иметь внешний mapping вида:
+
+```text
+0.0.0.0:5432->5432/tcp
+```
+
+---
+
+## 12. Обновление production без удаления базы
+
+Перед обновлением желательно сделать дамп PostgreSQL.
+
+```bash
+cd /opt/qa-interview-assistant-develop
+```
+
+Получить изменения:
+
+```bash
+git pull
+```
+
+Проверить конфигурацию:
+
+```bash
+docker compose \
+  --env-file .env \
+  -f docker-compose.prod.yml \
+  config >/dev/null
+```
+
+Пересобрать:
+
+```bash
+docker compose \
+  --env-file .env \
+  -f docker-compose.prod.yml \
+  build --pull
+```
+
+Пересоздать контейнеры:
+
+```bash
+docker compose \
+  --env-file .env \
+  -f docker-compose.prod.yml \
+  up -d --force-recreate
+```
+
+Проверить:
+
+```bash
+docker compose \
+  --env-file .env \
+  -f docker-compose.prod.yml \
+  ps
+```
+
+При обычном обновлении не выполняйте:
+
+```bash
+docker compose down -v
+```
+
+Флаг `-v` удалит volume PostgreSQL.
+
+---
+
+## 13. Подключение к PostgreSQL через терминал
+
+Подключение с использованием переменных контейнера:
+
+```bash
+docker exec -it qa_interview_postgres_prod sh -c \
+'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+Полезные команды:
 
 ```sql
+\l
+\dt
+\d categories
+\d questions
+SELECT * FROM levels;
+SELECT * FROM categories ORDER BY id;
+SELECT * FROM tags ORDER BY id;
+SELECT * FROM questions ORDER BY id LIMIT 20;
+SELECT * FROM interview_results ORDER BY id DESC LIMIT 20;
 \q
 ```
 
-То же самое одной командой:
+Узнать имя БД и пользователя:
 
 ```bash
-docker exec -it qa_interview_postgres_prod psql -U qa_user -d qa_interview_db -c "TRUNCATE TABLE interview_results RESTART IDENTITY;"
+docker exec qa_interview_postgres_prod sh -c \
+'printf "POSTGRES_DB=%s\nPOSTGRES_USER=%s\n" "$POSTGRES_DB" "$POSTGRES_USER"'
 ```
 
-### 7.3. Проверка API истории на VPS
+---
 
-```bash
-curl http://localhost:8080/api/interview-results
-```
+## 14. Подключение pgAdmin к production-БД
 
-Если история очищена, ответ должен быть:
-
-```json
-[]
-```
-
-## 8. Подключение pgAdmin к базе на VPS
-
-Безопасный вариант — не открывать PostgreSQL через браузера, а подключаться через SSH-туннель.
-
-### 8.1. Открыть PostgreSQL только для самого VPS
-
-В `docker-compose.prod.yml` в блок `db` можно добавить:
-
-```yaml
-ports:
-  - "127.0.0.1:15432:5432"
-```
-
-Именно `127.0.0.1`, чтобы база была доступна только с самого VPS.
-
-После изменения:
-
-```bash
-docker compose -f docker-compose.prod.yml up -d
-```
-
-Проверка:
-
-```bash
-docker ps
-```
-
-У контейнера БД должно быть:
+PostgreSQL привязан на VPS к:
 
 ```text
-127.0.0.1:15432->5432/tcp
+127.0.0.1:15432
 ```
 
-### 8.2. Создать SSH-туннель с ПК
+Он не доступен напрямую из интернета.
+
+### 14.1. Проверка порта на VPS
+
+```bash
+docker port qa_interview_postgres_prod 5432
+```
+
+Ожидаемо:
+
+```text
+127.0.0.1:15432
+```
+
+### 14.2. Вариант 1: ручной SSH-туннель
 
 На локальном компьютере:
 
@@ -641,285 +866,665 @@ docker ps
 ssh -N -L 15433:127.0.0.1:15432 <SSH_USER>@<SERVER_IP>
 ```
 
-Окно будет занято туннелем. Не закрывайте его, пока работаете с pgAdmin.
+Окно терминала останется занятым — это нормально.
 
-### 8.3. Подключение в pgAdmin
-
-Создайте новое подключение:
+Настройки pgAdmin:
 
 ```text
-Servers → Register → Server...
+Host name/address: 127.0.0.1
+Port:              15433
+Maintenance DB:    значение POSTGRES_DB
+Username:          значение POSTGRES_USER
+Password:          значение POSTGRES_PASSWORD
 ```
 
-Вкладка `General`:
-
-```text
-Name: QA Interview VPS
-```
+### 14.3. Вариант 2: встроенный SSH Tunnel pgAdmin
 
 Вкладка `Connection`:
 
 ```text
 Host name/address: 127.0.0.1
-Port: 15433
-Maintenance database: qa_interview_db
-Username: qa_user
-Password: <POSTGRES_PASSWORD_FROM_VPS_ENV>
+Port:              15432
+Maintenance DB:    значение POSTGRES_DB
+Username:          значение POSTGRES_USER
+Password:          значение POSTGRES_PASSWORD
 ```
 
-После этого pgAdmin будет работать именно с VPS-базой, которую использует production-сайт.
-
-## 9. Экспорт проекта с VPS на локальный компьютер
-
-Чтобы скопировать актуальный проект с VPS на ПК без `.env` и временных файлов, сначала создайте экспортную папку на VPS:
-
-```bash
-cd /opt
-rm -rf qa-interview-assistant-export
-mkdir qa-interview-assistant-export
-apt install -y rsync
-
-rsync -av /opt/qa-interview-assistant/ /opt/qa-interview-assistant-export/ \
-  --exclude '.env' \
-  --exclude '.git' \
-  --exclude 'node_modules' \
-  --exclude 'dist' \
-  --exclude '.venv' \
-  --exclude '__pycache__' \
-  --exclude '*.pyc' \
-  --exclude 'postgres_data' \
-  --exclude '*.db' \
-  --exclude '*.sqlite' \
-  --exclude '*.sqlite3'
-```
-
-Создайте `.env.example`:
-
-```bash
-cat > /opt/qa-interview-assistant-export/.env.example <<'ENVEOF'
-POSTGRES_DB=qa_interview_db
-POSTGRES_USER=qa_user
-POSTGRES_PASSWORD=change_me_strong_password
-
-DATABASE_URL=postgresql+psycopg://qa_user:change_me_strong_password@db:5432/qa_interview_db
-
-BACKEND_PORT=8000
-FRONTEND_PORT=3001
-
-VITE_API_BASE_URL=http://localhost:8000/api
-
-AI_API_KEY=
-ENVEOF
-```
-
-Скопируйте папку на ПК. Команда выполняется на локальном компьютере, а не внутри SSH-сессии VPS:
-
-```bash
-scp -r <SSH_USER>@<SERVER_IP>:/opt/qa-interview-assistant-export <LOCAL_TARGET_DIR>
-```
-
-Пример для Windows PowerShell:
-
-```powershell
-scp -r root@<SERVER_IP>:/opt/qa-interview-assistant-export "$env:USERPROFILE\Downloads\"
-```
-
-## 10. Бэкап и восстановление базы
-
-### 10.1. Сделать дамп БД на VPS
-
-```bash
-cd /opt/qa-interview-assistant
-docker exec qa_interview_postgres_prod pg_dump -U qa_user -d qa_interview_db --clean --if-exists > qa_interview_db_dump.sql
-```
-
-### 10.2. Восстановить дамп на VPS
-
-```bash
-docker exec -i qa_interview_postgres_prod psql -U qa_user -d qa_interview_db < qa_interview_db_dump.sql
-```
-
-### 10.3. Важно
-
-Если в истории есть реальные ФИО кандидатов и комментарии, дамп базы нельзя заливать в публичный GitHub.
-
-Для репозитория лучше использовать только `seed_mock_data.sql` с тестовыми данными.
-
-## 11. Частые проблемы
-
-### 11.1. `docker compose ps` пишет `no configuration file provided`
-
-Команда запущена не из папки проекта.
-
-Решение:
-
-```bash
-cd <PROJECT_DIR>
-docker compose ps
-```
-
-На VPS:
-
-```bash
-cd /opt/qa-interview-assistant
-docker compose -f docker-compose.prod.yml ps
-```
-
-### 11.2. Backend открывается, frontend нет
-
-Проверьте логи frontend:
-
-```bash
-docker compose logs frontend
-```
-
-Для VPS:
-
-```bash
-docker compose -f docker-compose.prod.yml logs frontend
-```
-
-Для локального Vite frontend должен слушать `0.0.0.0`:
-
-```dockerfile
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
-```
-
-### 11.3. Вопросы не отображаются
-
-Проверьте количество вопросов в БД:
-
-```bash
-docker exec -it qa_interview_postgres_prod psql -U qa_user -d qa_interview_db -c "SELECT COUNT(*) FROM questions;"
-```
-
-Проверьте API:
-
-```bash
-curl http://localhost:8080/api/questions
-```
-
-Если база пустая, выполните seed:
-
-```bash
-docker exec -i qa_interview_postgres_prod psql -U qa_user -d qa_interview_db < seed_mock_data.sql
-```
-
-### 11.4. Кандидат остался в истории после очистки локальной БД
-
-Если сайт открыт по адресу:
+Вкладка `SSH Tunnel`:
 
 ```text
-http://<SERVER_IP>:8080
+Use SSH tunneling: Yes
+Tunnel host:       <SERVER_IP>
+Tunnel port:       22
+Username:          <SSH_USER>
+Authentication:    Password или Identity file
 ```
 
-то он использует БД на VPS, а не локальную БД на ПК.
+---
 
-Чистить нужно VPS-БД:
+## 15. Загрузка тестовых данных
+
+В репозитории находится минимальный seed:
+
+```text
+seed_mock_data.sql
+```
+
+Он добавляет демонстрационные категории, теги, вопросы и связи вопрос–тег.
+
+Перед загрузкой рекомендуется сделать резервную копию.
+
+Загрузка на VPS:
 
 ```bash
-docker exec -it qa_interview_postgres_prod psql -U qa_user -d qa_interview_db -c "TRUNCATE TABLE interview_results RESTART IDENTITY;"
+docker exec -i qa_interview_postgres_prod sh -c \
+'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+< seed_mock_data.sql
 ```
 
 Проверка:
 
 ```bash
-curl http://localhost:8080/api/interview-results
+docker exec qa_interview_postgres_prod sh -c \
+'psql -X -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "
+SELECT
+    l.name AS level,
+    COUNT(q.id) AS questions
+FROM levels l
+LEFT JOIN questions q ON q.level_id = l.id
+GROUP BY l.id, l.name
+ORDER BY l.id;
+"'
 ```
 
-### 11.5. На сайте отображается старое состояние
+Seed построен так, чтобы не дублировать вопросы с тем же текстом при повторном запуске.
 
-Если API уже отдаёт актуальные данные, но frontend показывает старое состояние, очистите данные сайта в браузере:
+---
 
-```js
-localStorage.clear();
-sessionStorage.clear();
-location.reload();
-```
+## 16. Архивирование и физическое удаление категорий
 
-Команда выполняется в браузере:
+При удалении категории через API выполняется архивирование:
 
 ```text
-F12 → Console
+is_archived = true
 ```
 
-## 12. Что нельзя заливать в GitHub
+Категория остаётся в БД, если на неё ссылается хотя бы один вопрос.
 
-Не добавляйте в репозиторий:
+Физически можно удалить только архивированную категорию без связанных вопросов.
 
-```text
-.env
-node_modules/
-dist/
-.venv/
-__pycache__/
-*.pyc
-*.db
-*.sqlite
-*.sqlite3
-postgres_data/
-реальные дампы базы с ФИО кандидатов
+### 16.1. Просмотр кандидатов на удаление
+
+```bash
+docker exec qa_interview_postgres_prod sh -c '
+psql -X -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "
+SELECT c.id, c.name
+FROM categories c
+WHERE c.is_archived IS TRUE
+  AND NOT EXISTS (
+      SELECT 1
+      FROM questions q
+      WHERE q.category_id = c.id
+  )
+ORDER BY c.id;
+"'
 ```
 
-Можно добавлять:
+### 16.2. Ручное удаление
+
+Если функция уже установлена:
+
+```bash
+docker exec qa_interview_postgres_prod sh -c '
+psql -X -v ON_ERROR_STOP=1 \
+  -U "$POSTGRES_USER" \
+  -d "$POSTGRES_DB" \
+  -c "SELECT * FROM public.cleanup_unused_archived_categories();"
+'
+```
+
+---
+
+## 17. Автоматическая очистка категорий раз в 30 дней
+
+В репозитории находятся:
 
 ```text
-.env.example
+sql/cleanup_unused_archived_categories.sql
+deploy/scripts/qa-category-cleanup.sh
+deploy/systemd/qa-category-cleanup.service
+deploy/systemd/qa-category-cleanup.timer
+```
+
+### 17.1. Установка SQL-функции
+
+```bash
+docker exec -i qa_interview_postgres_prod sh -c \
+'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+< sql/cleanup_unused_archived_categories.sql
+```
+
+### 17.2. Установка скрипта
+
+```bash
+install -m 700 \
+  deploy/scripts/qa-category-cleanup.sh \
+  /usr/local/sbin/qa-category-cleanup.sh
+```
+
+### 17.3. Установка systemd unit и timer
+
+```bash
+install -m 644 \
+  deploy/systemd/qa-category-cleanup.service \
+  /etc/systemd/system/qa-category-cleanup.service
+
+install -m 644 \
+  deploy/systemd/qa-category-cleanup.timer \
+  /etc/systemd/system/qa-category-cleanup.timer
+```
+
+### 17.4. Включение
+
+```bash
+systemctl daemon-reload
+systemctl enable --now qa-category-cleanup.timer
+```
+
+Проверка:
+
+```bash
+systemctl status qa-category-cleanup.timer --no-pager
+systemctl list-timers --all | grep qa-category-cleanup
+```
+
+Ручной запуск:
+
+```bash
+systemctl start qa-category-cleanup.service
+```
+
+Логи:
+
+```bash
+journalctl -u qa-category-cleanup.service -n 50 --no-pager
+```
+
+Таймер удаляет только категории, для которых одновременно выполняются условия:
+
+```text
+is_archived = true
+и
+нет ни одного вопроса с таким category_id
+```
+
+Архивированные вопросы также считаются связанными. Пока существует хотя бы один вопрос, категория сохраняется.
+
+---
+
+## 18. Резервное копирование PostgreSQL
+
+### 18.1. Custom-формат
+
+```bash
+docker exec qa_interview_postgres_prod sh -c \
+'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom' \
+> "/root/qa_interview_$(date +%F_%H-%M-%S).dump"
+```
+
+### 18.2. SQL-формат
+
+```bash
+docker exec qa_interview_postgres_prod sh -c \
+'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner --no-privileges' \
+> "/root/qa_interview_$(date +%F_%H-%M-%S).sql"
+```
+
+### 18.3. Проверка
+
+```bash
+ls -lh /root/qa_interview_*
+```
+
+Файл не должен иметь размер `0`.
+
+### 18.4. Восстановление SQL-дампа
+
+```bash
+docker exec -i qa_interview_postgres_prod sh -c \
+'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+< /root/qa_interview_backup.sql
+```
+
+### 18.5. Восстановление custom-дампа
+
+```bash
+cat /root/qa_interview_backup.dump | \
+docker exec -i qa_interview_postgres_prod sh -c \
+'pg_restore --clean --if-exists --no-owner \
+-U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+---
+
+## 19. Docker-логи и место на диске
+
+В production Compose настроено:
+
+```yaml
+logging:
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+```
+
+На каждый контейнер хранится не более трёх файлов примерно по 10 МБ.
+
+Проверка:
+
+```bash
+docker inspect \
+  qa_interview_backend_prod \
+  qa_interview_frontend_prod \
+  qa_interview_postgres_prod \
+  --format '{{.Name}} -> {{json .HostConfig.LogConfig}}'
+```
+
+Ожидаемо:
+
+```text
+{"Type":"json-file","Config":{"max-file":"3","max-size":"10m"}}
+```
+
+Проверка диска:
+
+```bash
+df -h /
+docker system df
+```
+
+Размер логов:
+
+```bash
+docker ps -q | xargs -r docker inspect \
+  --format '{{.Name}} {{.LogPath}}'
+```
+
+На сервере с другими сервисами не используйте без проверки:
+
+```bash
+docker system prune -a --volumes
+```
+
+Эта команда может удалить ресурсы других проектов.
+
+---
+
+## 20. Основные API endpoints
+
+```text
+GET    /api/health
+
+GET    /api/categories
+POST   /api/categories
+PUT    /api/categories/{id}
+PATCH  /api/categories/{id}/archive
+PATCH  /api/categories/{id}/unarchive
+
+GET    /api/levels
+
+GET    /api/tags
+POST   /api/tags
+PUT    /api/tags/{id}
+PATCH  /api/tags/{id}/archive
+PATCH  /api/tags/{id}/unarchive
+
+GET    /api/questions
+POST   /api/questions
+POST   /api/questions/generate
+GET    /api/questions/{id}
+PUT    /api/questions/{id}
+DELETE /api/questions/{id}
+PATCH  /api/questions/{id}/archive
+PATCH  /api/questions/{id}/unarchive
+
+GET    /api/interview-results
+POST   /api/interview-results
+GET    /api/interview-results/{id}
+DELETE /api/interview-results/{id}
+```
+
+Фильтрация вопросов поддерживает:
+
+```text
+text
+category_id
+level_id
+is_archived
+tag_ids=1,2
+limit
+offset
+```
+
+---
+
+## 21. AI-генерация вопросов
+
+Endpoint:
+
+```text
+POST /api/questions/generate
+```
+
+Используются:
+
+```text
+GEMINI_API_KEY
+GEMINI_MODEL
+GEMINI_TIMEOUT_SECONDS
+```
+
+Обязательные параметры запроса:
+
+```text
+category_id
+level_id
+```
+
+Опциональные:
+
+```text
+tag_ids
+num_questions
+additional_text
+```
+
+Сгенерированные вопросы сначала возвращаются frontend как черновики. В текущей версии пользователь может выбрать вопросы для сохранения, но редактирование AI-черновика непосредственно до сохранения не реализовано.
+
+После сохранения вопрос можно редактировать обычным механизмом редактирования вопроса.
+
+---
+
+## 22. CI в GitHub Actions
+
+Workflow запускается для Pull Request в:
+
+```text
+main
+develop
+```
+
+Backend:
+
+```text
+Python 3.12
+Poetry
+Ruff
+Pytest
+```
+
+Frontend:
+
+```text
+Node.js 22
+npm ci
+npm run build
+```
+
+Текущий CI проверяет backend преимущественно на SQLite. Отдельная интеграционная проверка PostgreSQL пока не настроена.
+
+---
+
+## 23. Текущие ограничения безопасности
+
+На текущем production-развёртывании:
+
+- сайт доступен по HTTP на порту `8080`;
+- HTTPS пока не настроен;
+- обязательная авторизация пользователей не реализована;
+- rate limit для Gemini endpoint не реализован;
+- CORS backend разрешает все origin;
+- backend и PostgreSQL не опубликованы напрямую в интернет;
+- PostgreSQL для pgAdmin доступен только через loopback VPS и SSH-туннель.
+
+HTTPS защищает канал связи, но не заменяет авторизацию и контроль доступа.
+
+---
+
+## 24. Что можно и нельзя загружать в GitHub
+
+Можно:
+
+```text
+backend/
+frontend/
+deploy/
+sql/
 docker-compose.yml
 docker-compose.prod.yml
 backend/Dockerfile
 frontend/Dockerfile
 frontend/Dockerfile.prod
 frontend/nginx.conf
+.env.example
 seed_mock_data.sql
 README.md
-DEPLOYMENT_AND_DOCKER_GUIDE.md
+DEPLOYMENT_AND_DOCKER_GUIDE_GITHUB.md
 ```
 
-## 13. Краткая шпаргалка
+Нельзя:
 
-Локальный запуск:
-
-```bash
-cd <PROJECT_DIR>
-docker compose up --build -d
-docker compose ps
-docker compose logs backend
+```text
+.env
+*.dump
+*.backup
+реальные *.sql с данными кандидатов
+database/
+manifest/
+backups/
+qa-interview-export-*.tar.gz
+node_modules/
+dist/
+.venv/
+app.db
+*.sqlite
+SSH-ключи
+Gemini API key
+пароли PostgreSQL и VPS
 ```
 
-VPS:
+Перед коммитом:
 
 ```bash
-ssh <SSH_USER>@<SERVER_IP>
-cd /opt/qa-interview-assistant
-docker compose -f docker-compose.prod.yml up --build -d
+git status
+git diff --cached --name-only
+git check-ignore -v .env
+```
+
+---
+
+## 25. Частые проблемы
+
+### 25.1. `no configuration file provided`
+
+Команда выполняется не из каталога проекта либо не указан файл:
+
+```bash
+cd /opt/qa-interview-assistant-develop
 docker compose -f docker-compose.prod.yml ps
 ```
 
-Очистить историю на VPS:
+### 25.2. `open Dockerfile: no such file or directory`
+
+Проверьте:
 
 ```bash
-docker exec -it qa_interview_postgres_prod psql -U qa_user -d qa_interview_db -c "TRUNCATE TABLE interview_results RESTART IDENTITY;"
+ls -lh \
+  backend/Dockerfile \
+  frontend/Dockerfile.prod \
+  frontend/nginx.conf
 ```
 
-Проверить историю через API:
+### 25.3. Backend `unhealthy`
 
 ```bash
-curl http://localhost:8080/api/interview-results
+docker logs --tail=200 qa_interview_backend_prod
 ```
 
-Подключить pgAdmin к VPS через SSH-туннель:
-
-```bash
-ssh -N -L 15433:127.0.0.1:15432 <SSH_USER>@<SERVER_IP>
-```
-
-Настройки pgAdmin:
+Проверьте:
 
 ```text
-Host: 127.0.0.1
-Port: 15433
-Database: qa_interview_db
-User: qa_user
-Password: пароль из .env на VPS
+DATABASE_URL
+PostgreSQL health
+наличие psycopg
+ошибки создания схемы
+GEMINI_API_KEY не влияет на /api/health
+```
+
+### 25.4. Frontend не запускается
+
+Frontend зависит от healthy backend:
+
+```bash
+docker logs --tail=200 qa_interview_frontend_prod
+docker logs --tail=200 qa_interview_backend_prod
+```
+
+### 25.5. PostgreSQL показывает только `5432/tcp`
+
+Это означает, что порт не опубликован на VPS.
+
+В production Compose должен быть:
+
+```yaml
+ports:
+  - "127.0.0.1:15432:5432"
+```
+
+После изменения:
+
+```bash
+docker compose \
+  --env-file .env \
+  -f docker-compose.prod.yml \
+  up -d --force-recreate --no-deps db
+```
+
+### 25.6. AI-генерация не работает
+
+Проверьте:
+
+```bash
+docker exec qa_interview_backend_prod printenv GEMINI_API_KEY
+docker exec qa_interview_backend_prod printenv GEMINI_MODEL
+```
+
+Не используйте `AI_API_KEY`.
+
+### 25.7. `No space left on device`
+
+```bash
+df -h /
+docker system df
+du -sh /var/lib/docker/* 2>/dev/null | sort -h
+```
+
+Проверьте ротацию Docker-логов. Не удаляйте volumes без резервной копии.
+
+### 25.8. В базе нет вопросов
+
+```bash
+docker exec qa_interview_postgres_prod sh -c \
+'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+-c "SELECT COUNT(*) FROM questions;"'
+```
+
+При необходимости загрузите seed.
+
+---
+
+## 26. Краткая шпаргалка
+
+### Локальный запуск
+
+```bash
+cp .env.example .env
+docker compose --env-file .env up --build -d
+docker compose ps
+```
+
+### Production
+
+```bash
+cd /opt/qa-interview-assistant-develop
+
+docker compose \
+  --env-file .env \
+  -f docker-compose.prod.yml \
+  config >/dev/null
+
+docker compose \
+  --env-file .env \
+  -f docker-compose.prod.yml \
+  build --pull
+
+docker compose \
+  --env-file .env \
+  -f docker-compose.prod.yml \
+  up -d --force-recreate
+
+docker compose \
+  --env-file .env \
+  -f docker-compose.prod.yml \
+  ps
+```
+
+### Проверка
+
+```bash
+curl -sS http://127.0.0.1:8080/api/health
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+```
+
+### PostgreSQL
+
+```bash
+docker exec -it qa_interview_postgres_prod sh -c \
+'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+### Резервная копия
+
+```bash
+docker exec qa_interview_postgres_prod sh -c \
+'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+> "/root/qa_interview_$(date +%F_%H-%M-%S).sql"
+```
+
+### Логи
+
+```bash
+docker logs --tail=200 qa_interview_backend_prod
+docker logs --tail=200 qa_interview_frontend_prod
+docker logs --tail=200 qa_interview_postgres_prod
+```
+
+---
+
+## 27. Итог
+
+Актуальная production-конфигурация обеспечивает:
+
+```text
+PostgreSQL 16
+FastAPI backend
+React production build
+Nginx reverse proxy
+healthcheck PostgreSQL и backend
+локальный порт PostgreSQL для SSH-туннеля
+сохранение данных в Docker volume
+ротацию Docker-логов
+Gemini-генерацию вопросов
+автоматическую очистку неиспользуемых архивированных категорий
 ```
