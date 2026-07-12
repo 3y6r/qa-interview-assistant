@@ -89,7 +89,7 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
           <Form.Item name="categoryId" label={labelWithButton('Категория', 'categories')} rules={[{ required: true }]}>
             <Select options={categories.filter((c: any) => !c.isArchived).map((c: any) => ({ value: c.id, label: c.name }))} />
           </Form.Item>
-          <Form.Item name="levelId" label="Грейд">
+          <Form.Item name="levelId" label="Грейд" rules={[{ required: true }]}>
             <Select allowClear placeholder="Не выбран" options={levels.map((l: any) => ({ value: l.id, label: l.name }))} />
           </Form.Item>
           <Form.Item name="tagIds" label={labelWithButton('Теги', 'tags')}>

@@ -189,7 +189,7 @@ export function QuestionList() {
             onChange={setCategoryId}
             allowClear
             className={styles.filterSelect}
-            options={categories.filter((c: any) => !c.isArchived).map((c: any) => ({ value: c.id, label: c.name }))}
+            options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
           />
           <Select
             placeholder="Уровень"
@@ -327,7 +327,7 @@ export function QuestionList() {
                       }
                       description={
                         <Space size={4} wrap>
-                          {cat && !cat.isArchived && <Tag>{cat.name}</Tag>}
+                          {cat && <Tag>{cat.name}</Tag>}
                           {levelName && <Tag color="blue">{levelName}</Tag>}
                           {q.tags.filter((t: any) => !t.isArchived).map(t => <Tag key={t.id} color={t.color || '#108ee9'}>{t.name}</Tag>)}
                         </Space>
