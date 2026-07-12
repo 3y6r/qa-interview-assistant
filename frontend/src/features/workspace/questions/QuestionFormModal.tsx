@@ -37,7 +37,7 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
           expectedAnswer: editingQuestion.expectedAnswer,
           categoryId: editingQuestion.categoryId,
           levelId: editingQuestion.levelId,
-          tagIds: editingQuestion.tags.map(t => t.id),
+          tagIds: editingQuestion.tags.filter((t: any) => !t.isArchived).map(t => t.id),
         });
       } else {
         form.resetFields();
