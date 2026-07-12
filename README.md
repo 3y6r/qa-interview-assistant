@@ -15,7 +15,7 @@
 
 ## Быстрый старт
 
-### Frontend и mock-сервер
+### Frontend
 
 ```bash
 git clone -b develop https://github.com/3y6r/qa-interview-assistant.git
