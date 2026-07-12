@@ -87,9 +87,15 @@ def test_list_questions_filters_by_all_tags(tmp_path):
         category, level, sql, api = seed_common_entities(session)
         repo = QuestionRepository(session)
 
-        q1 = repo.create(make_question("Question 1", category.id, level.id), tag_ids=[sql.id, api.id])
-        repo.create(make_question("Question 2", category.id, level.id), tag_ids=[sql.id])
-        repo.create(make_question("Question 3", category.id, level.id), tag_ids=[api.id])
+        q1 = repo.create(
+            make_question("Question 1", category.id, level.id), tag_ids=[sql.id, api.id]
+        )
+        repo.create(
+            make_question("Question 2", category.id, level.id), tag_ids=[sql.id]
+        )
+        repo.create(
+            make_question("Question 3", category.id, level.id), tag_ids=[api.id]
+        )
         repo.create(make_question("Question 4", category.id, level.id))
 
         items = repo.list(tag_ids=[sql.id, api.id])

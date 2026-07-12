@@ -39,7 +39,9 @@ class QuestionRepository:
                 select(question_tags.c.question_id)
                 .where(question_tags.c.tag_id.in_(unique_ids))
                 .group_by(question_tags.c.question_id)
-                .having(func.count(func.distinct(question_tags.c.tag_id)) == len(unique_ids))
+                .having(
+                    func.count(func.distinct(question_tags.c.tag_id)) == len(unique_ids)
+                )
             )
             query = query.where(Question.id.in_(tag_match_ids))
         if offset is not None:
@@ -67,7 +69,9 @@ class QuestionRepository:
         return question
 
     def delete(self, question: Question) -> None:
-        self.db.execute(delete(question_tags).where(question_tags.c.question_id == question.id))
+        self.db.execute(
+            delete(question_tags).where(question_tags.c.question_id == question.id)
+        )
         self.db.delete(question)
         self.db.commit()
 

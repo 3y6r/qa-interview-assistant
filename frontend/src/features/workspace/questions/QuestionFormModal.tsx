@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { categoriesApi } from '../../../api/categories';
 import { tagsApi } from '../../../api/tags';
 import { levelsApi } from '../../../api/levels';
+import { LEVELS_QUERY_KEY } from '../../../utils/constants';
 import { EntityManagerModal } from './EntityManagerModal';
 import type { Question } from '../../../types';
 import styles from './QuestionFormModal.module.css';
@@ -26,17 +27,17 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
 
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list });
   const { data: tags = [] } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.list });
-  const { data: levels = [] } = useQuery({ queryKey: ['levels'], queryFn: levelsApi.list });
+  const { data: levels = [] } = useQuery({ queryKey: [LEVELS_QUERY_KEY], queryFn: levelsApi.list });
 
   useEffect(() => {
     if (open) {
       if (editingQuestion) {
         form.setFieldsValue({
           text: editingQuestion.text,
-          expected_answer: editingQuestion.expected_answer,
-          category_id: editingQuestion.category_id,
-          level_id: editingQuestion.level_id,
-          tag_ids: editingQuestion.tags.map((t) => t.id),
+          expectedAnswer: editingQuestion.expectedAnswer,
+          categoryId: editingQuestion.categoryId,
+          levelId: editingQuestion.levelId,
+          tagIds: editingQuestion.tags.filter((t: any) => !t.isArchived).map(t => t.id),
         });
       } else {
         form.resetFields();
@@ -51,11 +52,13 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
 
   const catCreate = useMutation({ mutationFn: categoriesApi.create, onSuccess: invalidate });
   const catUpdate = useMutation({ mutationFn: ({ id, data }: { id: number; data: { name: string } }) => categoriesApi.update(id, data), onSuccess: invalidate });
-  const catDelete = useMutation({ mutationFn: categoriesApi.delete, onSuccess: invalidate });
+  const catArchive = useMutation({ mutationFn: categoriesApi.archive, onSuccess: invalidate });
+  const catUnarchive = useMutation({ mutationFn: categoriesApi.unarchive, onSuccess: invalidate });
 
   const tagCreate = useMutation({ mutationFn: tagsApi.create, onSuccess: invalidate });
   const tagUpdate = useMutation({ mutationFn: ({ id, data }: { id: number; data: { name: string; color?: string } }) => tagsApi.update(id, data), onSuccess: invalidate });
-  const tagDelete = useMutation({ mutationFn: tagsApi.delete, onSuccess: invalidate });
+  const tagArchive = useMutation({ mutationFn: tagsApi.archive, onSuccess: invalidate });
+  const tagUnarchive = useMutation({ mutationFn: tagsApi.unarchive, onSuccess: invalidate });
 
   const handleOk = () => form.submit();
 
@@ -77,20 +80,20 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
         width={600}
       >
         <Form form={form} layout="vertical" onFinish={onSubmit}>
-          <Form.Item name="text" label="Вопрос" rules={[{ required: true, message: 'Введите вопрос' }]}>
-            <Input.TextArea rows={3} />
+          <Form.Item name="text" label="Вопрос" rules={[{ required: true }]}>
+            <Input.TextArea rows={3} maxLength={1000} showCount />
           </Form.Item>
-          <Form.Item name="expected_answer" label="Ожидаемый ответ" rules={[{ required: true, message: 'Введите ожидаемый ответ' }]}>
-            <Input.TextArea rows={3} />
+          <Form.Item name="expectedAnswer" label="Ожидаемый ответ" rules={[{ required: true }]}>
+            <Input.TextArea rows={3} maxLength={1000} showCount />
           </Form.Item>
-          <Form.Item name="category_id" label={labelWithButton('Категория', 'categories')} rules={[{ required: true, message: 'Выберите категорию' }]}>
-            <Select options={categories.map((c) => ({ value: c.id, label: c.name }))} />
+          <Form.Item name="categoryId" label={labelWithButton('Категория', 'categories')} rules={[{ required: true }]}>
+            <Select options={categories.filter((c: any) => !c.isArchived).map((c: any) => ({ value: c.id, label: c.name }))} />
           </Form.Item>
-          <Form.Item name="level_id" label="Грейд" rules={[{ required: true, message: 'Выберите грейд' }]}>
-            <Select options={levels.map((l) => ({ value: l.id, label: l.name }))} />
+          <Form.Item name="levelId" label="Грейд" rules={[{ required: true }]}>
+            <Select allowClear placeholder="Не выбран" options={levels.map((l: any) => ({ value: l.id, label: l.name }))} />
           </Form.Item>
-          <Form.Item name="tag_ids" label={labelWithButton('Теги', 'tags')}>
-            <Select mode="multiple" options={tags.map((t) => ({ value: t.id, label: t.name }))} />
+          <Form.Item name="tagIds" label={labelWithButton('Теги', 'tags')}>
+            <Select mode="multiple" options={tags.filter((t: any) => !t.isArchived).map((t: any) => ({ value: t.id, label: t.name }))} />
           </Form.Item>
         </Form>
       </Modal>
@@ -102,7 +105,9 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
         onClose={() => setManagerTarget(null)}
         onCreate={(name) => catCreate.mutate({ name })}
         onUpdate={(id, name) => catUpdate.mutate({ id, data: { name } })}
-        onDelete={(id) => catDelete.mutate(id)}
+        onArchive={(id) => catArchive.mutate(id)}
+        onUnarchive={(id) => catUnarchive.mutate(id)}
+        itemType="category"
       />
 
       <EntityManagerModal
@@ -112,8 +117,10 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
         onClose={() => setManagerTarget(null)}
         onCreate={(name, color) => tagCreate.mutate({ name, color })}
         onUpdate={(id, name, color) => tagUpdate.mutate({ id, data: { name, color: color || '#108ee9' } })}
-        onDelete={(id) => tagDelete.mutate(id)}
+        onArchive={(id) => tagArchive.mutate(id)}
+        onUnarchive={(id) => tagUnarchive.mutate(id)}
         showColor
+        itemType="tag"
       />
     </>
   );

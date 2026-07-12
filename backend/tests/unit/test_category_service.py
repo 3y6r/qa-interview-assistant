@@ -10,6 +10,17 @@ from app.services.category_service import CategoryService
 from tests.unit.helpers import DummyRepo, DummySession
 
 
+def test_list_categories_passes_archive_filter(monkeypatch):
+    repo = DummyRepo(list_result=[Category(id=1, name="Backend", is_archived=False)])
+    monkeypatch.setattr(module, "CategoryRepository", lambda db: repo)
+
+    service = CategoryService(DummySession())
+    categories = service.list_categories(is_archived=False)
+
+    assert len(categories) == 1
+    assert repo.list_calls == [{"is_archived": False}]
+
+
 def test_create_category_trims_name_and_creates(monkeypatch):
     repo = DummyRepo()
     monkeypatch.setattr(module, "CategoryRepository", lambda db: repo)
@@ -58,11 +69,61 @@ def test_update_category_renames_and_archives(monkeypatch):
     monkeypatch.setattr(module, "CategoryRepository", lambda db: repo)
 
     service = CategoryService(DummySession())
-    result = service.update_category(1, SimpleNamespace(name="  New  ", is_archived=True))
+    result = service.update_category(
+        1, SimpleNamespace(name="  New  ", is_archived=True)
+    )
 
     assert result.name == "New"
     assert result.is_archived is True
     assert repo.updated == [category]
+
+
+def test_archive_category_sets_flag(monkeypatch):
+    category = Category(id=1, name="Backend", is_archived=False)
+    repo = DummyRepo(get_result=category)
+    monkeypatch.setattr(module, "CategoryRepository", lambda db: repo)
+
+    service = CategoryService(DummySession())
+    result = service.archive_category(1)
+
+    assert result.is_archived is True
+    assert repo.updated == [category]
+
+
+def test_archive_category_missing_raises_not_found(monkeypatch):
+    repo = DummyRepo(get_result=None)
+    monkeypatch.setattr(module, "CategoryRepository", lambda db: repo)
+
+    service = CategoryService(DummySession())
+
+    with pytest.raises(NotFoundError, match="Category not found"):
+        service.archive_category(1)
+
+    assert repo.updated == []
+
+
+def test_unarchive_category_sets_flag(monkeypatch):
+    category = Category(id=1, name="Backend", is_archived=True)
+    repo = DummyRepo(get_result=category)
+    monkeypatch.setattr(module, "CategoryRepository", lambda db: repo)
+
+    service = CategoryService(DummySession())
+    result = service.unarchive_category(1)
+
+    assert result.is_archived is False
+    assert repo.updated == [category]
+
+
+def test_unarchive_category_missing_raises_not_found(monkeypatch):
+    repo = DummyRepo(get_result=None)
+    monkeypatch.setattr(module, "CategoryRepository", lambda db: repo)
+
+    service = CategoryService(DummySession())
+
+    with pytest.raises(NotFoundError, match="Category not found"):
+        service.unarchive_category(1)
+
+    assert repo.updated == []
 
 
 def test_update_category_rejects_name_conflict(monkeypatch):

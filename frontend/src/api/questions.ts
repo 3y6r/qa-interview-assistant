@@ -1,31 +1,24 @@
 import client from './client';
-import type { Question, CreateQuestionRequest, UpdateQuestionRequest, GenerateQuestionsRequest } from '../types';
+import type { Question, CreateQuestionRequest, UpdateQuestionRequest } from '../types';
 
 export interface QuestionFilters {
+  text?: string;
   categoryId?: number;
   levelId?: number;
-  text?: string;
-  tagIds?: number[];
   isArchived?: boolean;
+  tagIds?: number[];
+  limit?: number;
+  offset?: number;
 }
 
-const toBackendParams = (filters?: QuestionFilters) => {
-  if (!filters) return undefined;
-
-  const params: Record<string, string | number | boolean> = {};
-
-  if (filters.text) params.text = filters.text;
-  if (filters.categoryId) params.category_id = filters.categoryId;
-  if (filters.levelId) params.level_id = filters.levelId;
-  if (typeof filters.isArchived === 'boolean') params.is_archived = filters.isArchived;
-  if (filters.tagIds?.length) params.tag_ids = filters.tagIds.join(',');
-
-  return params;
-};
-
 export const questionsApi = {
-  list: (filters?: QuestionFilters) =>
-    client.get<Question[]>('/questions', { params: toBackendParams(filters) }).then((r) => r.data),
+  list: (filters?: QuestionFilters) => {
+    const params = filters ? { ...filters } : undefined;
+    if (params?.tagIds) {
+      params.tagIds = params.tagIds.join(',') as any;
+    }
+    return client.get<Question[]>('/questions', { params }).then((r) => r.data);
+  },
 
   getById: (id: number) =>
     client.get<Question>(`/questions/${id}`).then((r) => r.data),
@@ -37,11 +30,19 @@ export const questionsApi = {
     client.put<Question>(`/questions/${id}`, data).then((r) => r.data),
 
   archive: (id: number) =>
-    client.patch(`/questions/${id}/archive`).then((r) => r.data),
+    client.patch<{ id: number; isArchived: boolean }>(`/questions/${id}/archive`).then((r) => r.data),
+
+  unarchive: (id: number) =>
+    client.patch<{ id: number; isArchived: boolean }>(`/questions/${id}/unarchive`).then((r) => r.data),
 
   delete: (id: number) =>
     client.delete(`/questions/${id}`).then((r) => r.data),
 
-  generate: (data: GenerateQuestionsRequest) =>
-    client.post<Question[]>('/ai/questions/generate', data).then((r) => r.data),
+  generate: (data: {
+    categoryId: number;
+    levelId: number;
+    tagIds?: number[];
+    numQuestions: number;
+    additionalText?: string;
+  }) => client.post<{ questions: any[] }>('/questions/generate', data).then((r) => r.data),
 };

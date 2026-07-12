@@ -1,18 +1,28 @@
-import { useState } from 'react';
-import { Button, Modal, Statistic, Row, Col, Tag, Descriptions, Table, message, Input } from 'antd';
+import { useState, useEffect } from 'react';
+import { Button, Modal, Statistic, Row, Col, Tag, Descriptions, Table, Input, message } from 'antd';
 import { CalculatorOutlined, RotateLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import { useMutation } from '@tanstack/react-query';
-import dayjs from 'dayjs';
 import { CandidateCard } from '../features/workspace/candidate/CandidateCard';
 import { SelectedQuestionsPanel } from '../features/workspace/panel/SelectedQuestionsPanel';
 import { QuestionList } from '../features/workspace/questions/QuestionList';
-import { useEditorStore } from '../stores/editorStore';
+import { useEditorStore, ACTIVE_TOKEN_KEY } from '../stores/editorStore';
 import { interviewsApi } from '../api/interviews';
-import { QUESTION_LEVELS } from '../utils/constants';
+import dayjs from 'dayjs';
 import styles from './WorkspacePage.module.css';
 
 export function WorkspacePage() {
-  const { candidate, selectedQuestions, scores, reset } = useEditorStore();
+  const { candidate, selectedQuestions, scores, reset, restoreSession } = useEditorStore();
+
+  useEffect(() => {
+    const entries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+    const navType = entries.length > 0 ? entries[0].type : 'navigate';
+    if (navType === 'reload') {
+      const storedToken = sessionStorage.getItem(ACTIVE_TOKEN_KEY);
+      if (storedToken) {
+        restoreSession(storedToken);
+      }
+    }
+  }, []);
   const canStart = !!candidate && selectedQuestions.length > 0;
   const [resultOpen, setResultOpen] = useState(false);
   const [generalComment, setGeneralComment] = useState('');
@@ -21,7 +31,7 @@ export function WorkspacePage() {
     const allScores = Object.values(scores);
     const rated = allScores.filter((s) => s.score > 0);
     const totalScore = rated.reduce((sum, s) => sum + s.score, 0);
-    const averageScore = selectedQuestions.length ? totalScore / selectedQuestions.length : 0;
+    const averageScore = rated.length ? totalScore / selectedQuestions.length : 0;
     let finalGrade = 'N/A';
     if (averageScore >= 8) finalGrade = 'Отлично';
     else if (averageScore >= 6) finalGrade = 'Хорошо';
@@ -41,27 +51,24 @@ export function WorkspacePage() {
 
   const handleReset = () => {
     reset();
-    setGeneralComment('');
     setResultOpen(false);
   };
 
-  const result = calculateResult();
-
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!candidate) throw new Error('Candidate is required');
+      const result = calculateResult();
 
-      return interviewsApi.create({
-        candidate_full_name: candidate.candidateName,
-        interview_date: candidate.interviewDate || dayjs().format('YYYY-MM-DD'),
-        average_score: Number(result.averageScore.toFixed(2)),
-        comment: generalComment.trim(),
+      await interviewsApi.create({
+        candidateFullName: candidate!.candidateName,
+        position: candidate!.position,
+        interviewDate: dayjs().format('YYYY-MM-DD'),
+        averageScore: result.averageScore,
+        comment: generalComment.trim() || `Средний балл: ${result.averageScore.toFixed(1)}`,
       });
     },
     onSuccess: () => {
       message.success('Отчёт сохранён');
       setResultOpen(false);
-      setGeneralComment('');
       reset();
     },
     onError: () => message.error('Ошибка при сохранении'),
@@ -69,18 +76,15 @@ export function WorkspacePage() {
 
   const handleSave = () => {
     if (!candidate) return;
-    if (!generalComment.trim()) {
-      message.warning('Введите общий комментарий по кандидату');
-      return;
-    }
     saveMutation.mutate();
   };
+
+  const result = calculateResult();
 
   const columns = [
     { title: '№', key: 'index', width: 40, render: (_: any, __: any, i: number) => i + 1 },
     { title: 'Вопрос', dataIndex: 'text', key: 'question' },
     { title: 'Оценка', key: 'score', render: (_: any, q: any) => scores[q.id]?.score ?? '—' },
-    { title: 'Комментарий', key: 'comment', render: (_: any, q: any) => scores[q.id]?.comment || '—' },
   ];
 
   return (
@@ -140,15 +144,14 @@ export function WorkspacePage() {
             <Descriptions size="small" column={2} className={styles.resultDescription}>
               <Descriptions.Item label="Кандидат">{candidate.candidateName}</Descriptions.Item>
               <Descriptions.Item label="Должность">{candidate.position}</Descriptions.Item>
-              <Descriptions.Item label="Уровень">{QUESTION_LEVELS.find((l) => l.value === candidate.level)?.label}</Descriptions.Item>
-              <Descriptions.Item label="Дата">{dayjs(candidate.interviewDate).format('DD.MM.YYYY')}</Descriptions.Item>
+              <Descriptions.Item label="Уровень">{candidate.level}</Descriptions.Item>
               <Descriptions.Item label="Оценено вопросов">{result.ratedCount} / {selectedQuestions.length}</Descriptions.Item>
             </Descriptions>
             <Input.TextArea
-              rows={4}
+              rows={3}
+              placeholder="Общий комментарий о кандидате..."
               value={generalComment}
               onChange={(e) => setGeneralComment(e.target.value)}
-              placeholder="Общий комментарий по кандидату. Например: сильные стороны, слабые стороны, итоговая рекомендация."
               style={{ marginBottom: 16 }}
             />
             <Table dataSource={selectedQuestions} columns={columns} rowKey="id" pagination={false} size="small" />

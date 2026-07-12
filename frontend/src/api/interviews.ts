@@ -1,30 +1,32 @@
 import client from './client';
-import type { CreateInterviewResultRequest, InterviewResult } from '../types';
+import type { InterviewResult } from '../types';
 
 export interface InterviewResultFilters {
-  candidateName?: string;
-  fromDate?: string;
-  toDate?: string;
+  candidateFullName?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+  offset?: number;
 }
 
-const toBackendParams = (filters?: InterviewResultFilters) => {
-  if (!filters) return undefined;
-
-  const params: Record<string, string> = {};
-  if (filters.candidateName) params.candidate_full_name = filters.candidateName;
-  if (filters.fromDate) params.date_from = filters.fromDate;
-  if (filters.toDate) params.date_to = filters.toDate;
-
-  return params;
-};
+export interface CreateInterviewResultRequest {
+  candidateFullName: string;
+  position: string;
+  interviewDate: string;
+  averageScore: number;
+  comment: string;
+}
 
 export const interviewsApi = {
-  list: (filters?: InterviewResultFilters) =>
-    client.get<InterviewResult[]>('/interview-results', { params: toBackendParams(filters) }).then((r) => r.data),
-
   create: (data: CreateInterviewResultRequest) =>
     client.post<InterviewResult>('/interview-results', data).then((r) => r.data),
 
   getById: (id: number) =>
     client.get<InterviewResult>(`/interview-results/${id}`).then((r) => r.data),
+
+  list: (filters?: InterviewResultFilters) =>
+    client.get<InterviewResult[]>('/interview-results', { params: filters }).then((r) => r.data),
+
+  delete: (id: number) =>
+    client.delete(`/interview-results/${id}`).then((r) => r.data),
 };

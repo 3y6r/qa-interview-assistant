@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "qa-interview-assistant-backend"
+version = "0.1.0"
+description = "Backend service for QA interview assistant"
+authors = ["Ivan Vishnevsky"]
+packages = [{ include = "app" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.0"
+uvicorn = { version = "^0.30.0", extras = ["standard"] }
+sqlalchemy = "^2.0.30"
+pydantic = "^2.7.0"
+psycopg = { version = "^3.2.3", extras = ["binary"] }
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+httpx = "^0.28.0"
+ruff = "^0.5.0"
+
+[build-system]
+requires = ["poetry-core>=1.9.0"]
+build-backend = "poetry.core.masonry.api"

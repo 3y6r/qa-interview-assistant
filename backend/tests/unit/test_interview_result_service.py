@@ -94,6 +94,30 @@ def test_get_result_missing_raises_not_found(monkeypatch):
         service.get_result(1)
 
 
+def test_delete_result_deletes_entity(monkeypatch):
+    result = make_result()
+    repo = DummyRepo(get_result=result)
+    monkeypatch.setattr(module, "InterviewResultRepository", lambda db: repo)
+
+    service = InterviewResultService(DummySession())
+    service.delete_result(1)
+
+    assert repo.get_calls == [1]
+    assert repo.deleted == [result]
+
+
+def test_delete_result_missing_raises_not_found(monkeypatch):
+    repo = DummyRepo(get_result=None)
+    monkeypatch.setattr(module, "InterviewResultRepository", lambda db: repo)
+
+    service = InterviewResultService(DummySession())
+
+    with pytest.raises(NotFoundError, match="Interview result not found"):
+        service.delete_result(1)
+
+    assert repo.deleted == []
+
+
 def test_list_results_passes_filters(monkeypatch):
     repo = DummyRepo(list_result=[make_result()])
     monkeypatch.setattr(module, "InterviewResultRepository", lambda db: repo)

@@ -1,0 +1,12 @@
+.filters {
+  width: 100%;
+}
+.nameInput {
+  width: 200px;
+}
+.levelSelect {
+  width: 130px;
+}
+.statusSelect {
+  width: 150px;
+}

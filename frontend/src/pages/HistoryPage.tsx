@@ -1,53 +1,115 @@
 import { useState } from 'react';
-import { Card, Table, Typography, Modal, Descriptions, Button } from 'antd';
-import { EyeOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
+import { Card, Table, Tag, Typography, Modal, Descriptions, Button, Statistic, Row, Col, Popconfirm, Tooltip, message } from 'antd';
+import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ColumnsType } from 'antd/es/table';
-import dayjs from 'dayjs';
 import { interviewsApi } from '../api/interviews';
 import type { InterviewResult } from '../types';
-import { HistoryFilters, type HistoryFiltersValue } from '../features/history/HistoryFilters';
+import { HistoryFilters } from '../features/history/HistoryFilters';
 import styles from './HistoryPage.module.css';
 
+const GRADE_MAP: Record<string, { label: string; color: string }> = {
+  Отлично: { label: 'Отлично', color: 'green' },
+  Хорошо: { label: 'Хорошо', color: 'blue' },
+  Удовлетворительно: { label: 'Удовлетворительно', color: 'orange' },
+  Плохо: { label: 'Плохо', color: 'red' },
+};
+
+function getGrade(averageScore: number): string {
+  if (averageScore >= 8) return 'Отлично';
+  if (averageScore >= 6) return 'Хорошо';
+  if (averageScore >= 4) return 'Удовлетворительно';
+  if (averageScore > 0) return 'Плохо';
+  return 'N/A';
+}
+
+type Filters = {
+  candidateName: string;
+  fromDate: string;
+  toDate: string;
+};
+
 export function HistoryPage() {
-  const [filters, setFilters] = useState<HistoryFiltersValue>({
+  const queryClient = useQueryClient();
+  const [filters, setFilters] = useState<Filters>({
     candidateName: '', fromDate: '', toDate: '',
   });
   const [selectedResult, setSelectedResult] = useState<InterviewResult | null>(null);
 
-  const { data = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['interview-results', filters],
-    queryFn: () => interviewsApi.list(filters),
+    queryFn: () => interviewsApi.list({
+      candidateFullName: filters.candidateName || undefined,
+      dateFrom: filters.fromDate || undefined,
+      dateTo: filters.toDate || undefined,
+      limit: 100,
+    }),
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => interviewsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['interview-results'] });
+      message.success('Результат удалён');
+    },
+    onError: () => message.error('Ошибка при удалении'),
+  });
+
+  const results = data || [];
 
   const columns: ColumnsType<InterviewResult> = [
     {
-      title: 'Кандидат', dataIndex: 'candidate_full_name', key: 'candidate_full_name', width: 220,
+      title: 'Кандидат', dataIndex: 'candidateFullName', key: 'candidateFullName', width: 180,
+      className: styles.centeredHeader,
+      onHeaderCell: () => ({ style: { textAlign: 'center' } }),
     },
     {
-      title: 'Дата собеседования', dataIndex: 'interview_date', key: 'interview_date', width: 170,
-      render: (value) => dayjs(value).format('DD.MM.YYYY'),
+      title: 'Должность', dataIndex: 'position', key: 'position', width: 180,
+      className: styles.centeredHeader,
+      onHeaderCell: () => ({ style: { textAlign: 'center' } }),
     },
     {
-      title: 'Средний балл', dataIndex: 'average_score', key: 'average_score', width: 140,
-      render: (value) => Number(value).toFixed(1),
+      title: 'Средний балл', dataIndex: 'averageScore', key: 'averageScore', width: 120,
+      className: styles.centeredHeader,
+      onHeaderCell: () => ({ style: { textAlign: 'center' } }),
+      render: (score) => score.toFixed(1),
     },
     {
-      title: 'Комментарий', dataIndex: 'comment', key: 'comment', ellipsis: true,
+      title: 'Оценка', key: 'grade', width: 140,
+      className: styles.centeredHeader,
+      onHeaderCell: () => ({ style: { textAlign: 'center' } }),
+      render: (_, record) => {
+        const grade = getGrade(record.averageScore);
+        const g = GRADE_MAP[grade];
+        return g ? <Tag color={g.color}>{g.label}</Tag> : grade;
+      },
     },
     {
-      title: 'Сохранено', dataIndex: 'created_at', key: 'created_at', width: 170,
-      render: (value) => dayjs(value).format('DD.MM.YYYY HH:mm'),
+      title: 'Дата интервью', dataIndex: 'interviewDate', key: 'interviewDate', width: 130,
+      className: styles.centeredHeader,
+      onHeaderCell: () => ({ style: { textAlign: 'center' } }),
+      render: (val) => val,
     },
     {
-      title: '', key: 'actions', width: 60,
+      title: 'Действие', key: 'actions', width: 100,
+      className: styles.centeredHeader,
+      onHeaderCell: () => ({ style: { textAlign: 'center' } }),
       render: (_, record) => (
-        <Button
-          type="link"
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => setSelectedResult(record)}
-        />
+        <span style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+          <Tooltip title="Просмотреть">
+            <Button
+              type="link"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => setSelectedResult(record)}
+            />
+          </Tooltip>
+          <Popconfirm title="Удалить результат?" onConfirm={() => deleteMutation.mutate(record.id)}>
+            <Tooltip title="Удалить">
+              <Button type="link" size="small" danger icon={<DeleteOutlined />} />
+            </Tooltip>
+          </Popconfirm>
+        </span>
       ),
     },
   ];
@@ -57,35 +119,65 @@ export function HistoryPage() {
       <Typography.Title level={4} className={styles.title}>История интервью</Typography.Title>
 
       <Card size="small" className={styles.filterCard}>
-        <HistoryFilters filters={filters} onChange={setFilters} />
+        <HistoryFilters filters={filters} onChange={(f) => { setFilters(f); }} />
       </Card>
 
       <Table<InterviewResult>
         rowKey="id"
         columns={columns}
-        dataSource={data}
+        dataSource={results}
         loading={isLoading}
-        pagination={{ pageSize: 10, showTotal: (total) => `Всего: ${total}`, showSizeChanger: false }}
-        locale={{ emptyText: 'Нет сохранённых интервью' }}
+        pagination={{
+          pageSize: 10,
+          showTotal: (total) => `Всего: ${total}`,
+          showSizeChanger: false,
+        }}
+        locale={{ emptyText: 'Нет сохранённых результатов' }}
         size="middle"
       />
 
       <Modal
-        title={`Интервью: ${selectedResult?.candidate_full_name ?? ''}`}
+        title={`Результат: ${selectedResult?.candidateFullName ?? ''}`}
         open={!!selectedResult}
         onCancel={() => setSelectedResult(null)}
-        footer={[<Button key="close" onClick={() => setSelectedResult(null)}>Закрыть</Button>]}
-        width={620}
+        footer={[
+          <Button key="close" onClick={() => setSelectedResult(null)}>Закрыть</Button>,
+        ]}
+        width={550}
         destroyOnClose
       >
         {selectedResult && (
-          <Descriptions size="small" column={1} className={styles.detailDescriptions}>
-            <Descriptions.Item label="Кандидат">{selectedResult.candidate_full_name}</Descriptions.Item>
-            <Descriptions.Item label="Дата собеседования">{dayjs(selectedResult.interview_date).format('DD.MM.YYYY')}</Descriptions.Item>
-            <Descriptions.Item label="Средний балл">{Number(selectedResult.average_score).toFixed(1)} / 10</Descriptions.Item>
-            <Descriptions.Item label="Комментарий">{selectedResult.comment}</Descriptions.Item>
-            <Descriptions.Item label="Сохранено">{dayjs(selectedResult.created_at).format('DD.MM.YYYY HH:mm')}</Descriptions.Item>
-          </Descriptions>
+          <>
+            <Descriptions size="small" column={2} className={styles.detailDescriptions}>
+              <Descriptions.Item label="Кандидат">{selectedResult.candidateFullName}</Descriptions.Item>
+              <Descriptions.Item label="Должность">{selectedResult.position}</Descriptions.Item>
+              <Descriptions.Item label="Дата интервью">{selectedResult.interviewDate}</Descriptions.Item>
+            </Descriptions>
+
+            <Row gutter={16} className={styles.detailStats}>
+              <Col span={12}>
+                <Statistic title="Средний балл" value={selectedResult.averageScore.toFixed(1)} suffix="/ 10" />
+              </Col>
+              <Col span={12}>
+                <Statistic title="Оценка" valueRender={() => {
+                  const grade = getGrade(selectedResult.averageScore);
+                  const g = GRADE_MAP[grade];
+                  return (
+                    <Tag color={g?.color || 'default'} className={styles.detailGradeTag}>
+                      {grade}
+                    </Tag>
+                  );
+                }} />
+              </Col>
+            </Row>
+
+            {selectedResult.comment && (
+              <>
+                <Typography.Text strong className={styles.questionsHeader}>Комментарий</Typography.Text>
+                <Typography.Paragraph style={{ whiteSpace: 'pre-wrap' }}>{selectedResult.comment}</Typography.Paragraph>
+              </>
+            )}
+          </>
         )}
       </Modal>
     </div>
