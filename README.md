@@ -61,7 +61,7 @@ http://127.0.0.1:8000/docs
         <a href="https://github.com/zubr1337">
           <img src="https://github.com/zubr1337.png" width="85px;" style="border-radius: 50%;" alt="Федор Зуенко"/><br />
           <div style="min-height: 40px; display: flex; align-items: center; justify-content: center;">
-            <sub><b>Федор <br /> Зуенко</b></sub>
+            <sub><b>Федор Зуенко</b></sub>
           </div>
         </a>
         <img src="https://img.shields.io/badge/Role-Project%20Manager-red" alt="Project Manager" />
