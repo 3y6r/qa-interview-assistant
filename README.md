@@ -57,7 +57,7 @@ http://127.0.0.1:8000/docs
   <tbody>
     <tr>
       <!-- 1. Федор Зуенко (Project Manager) -->
-      <td align="center" valign="top" width="14.2%">
+      <td align="center" valign="top" width="13.2%">
         <a href="https://github.com/zubr1337">
           <img src="https://github.com/zubr1337.png" width="85px;" style="border-radius: 50%;" alt="Федор Зуенко"/><br />
           <div style="min-height: 40px; display: flex; align-items: center; justify-content: center;">
