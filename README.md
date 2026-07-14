@@ -1,5 +1,5 @@
 
-### 👥 Contributors✨
+### Contributors✨
 
 <table>
   <tbody>
