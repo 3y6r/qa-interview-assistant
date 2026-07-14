@@ -108,7 +108,7 @@ http://127.0.0.1:8000/docs
         <img src="https://img.shields.io/badge/Role-Analyst-yellow" alt="Analyst" />
       </td>
       <!-- 7. Сосульников Кирилл (QA Tester) -->
-      <td align="center" valign="top" width="14.2%">
+      <td align="center" valign="top" width="14.8%">
         <a href="https://github.com/Makyan228">
           <img src="https://github.com/Makyan228.png" width="85px;" style="border-radius: 50%;" alt="Сосульников Кирилл"/><br />
           <p style="margin-bottom: 14px;"><sub><b>Сосульников Кирилл</b></sub></p>
