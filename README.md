@@ -54,7 +54,7 @@ http://127.0.0.1:8000/docs
 
 
 
-### Contributors✨
+### Contributors
 
 <table>
   <tbody>
