@@ -29,6 +29,25 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
   const { data: tags = [] } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.list });
   const { data: levels = [] } = useQuery({ queryKey: [LEVELS_QUERY_KEY], queryFn: levelsApi.list });
 
+  const currentCategoryId = Form.useWatch('categoryId', form);
+  const currentTagIds = Form.useWatch('tagIds', form) ?? [];
+
+  const categoryOptions = categories
+    .filter((c: any) => !c.isArchived || c.id === currentCategoryId)
+    .map((c: any) => ({
+      value: c.id,
+      label: c.isArchived ? `${c.name} (архив)` : c.name,
+      disabled: c.isArchived,
+    }));
+
+  const tagOptions = tags
+    .filter((t: any) => !t.isArchived || currentTagIds.includes(t.id))
+    .map((t: any) => ({
+      value: t.id,
+      label: t.isArchived ? `${t.name} (архив)` : t.name,
+      disabled: t.isArchived,
+    }));
+
   useEffect(() => {
     if (open) {
       if (editingQuestion) {
@@ -87,13 +106,16 @@ export function QuestionFormModal({ open, editingQuestion, onClose, onSubmit, lo
             <Input.TextArea rows={3} maxLength={1000} showCount />
           </Form.Item>
           <Form.Item name="categoryId" label={labelWithButton('Категория', 'categories')} rules={[{ required: true }]}>
-            <Select options={categories.filter((c: any) => !c.isArchived).map((c: any) => ({ value: c.id, label: c.name }))} />
+            <Select options={categoryOptions} />
           </Form.Item>
           <Form.Item name="levelId" label="Грейд" rules={[{ required: true }]}>
             <Select allowClear placeholder="Не выбран" options={levels.map((l: any) => ({ value: l.id, label: l.name }))} />
           </Form.Item>
           <Form.Item name="tagIds" label={labelWithButton('Теги', 'tags')}>
-            <Select mode="multiple" options={tags.filter((t: any) => !t.isArchived).map((t: any) => ({ value: t.id, label: t.name }))} />
+            <Select
+              mode="multiple"
+              options={tagOptions}
+            />
           </Form.Item>
         </Form>
       </Modal>
