@@ -101,8 +101,8 @@ http://127.0.0.1:8000/docs
       </td>
       <!-- 6. Лефанов Алексей (Analyst) -->
       <td align="center" valign="top" width="14.2%">
-        <a href="https://github.com/reynamane">
-          <img src="https://github.com/reynamane.png" width="85px;" style="border-radius: 50%;" alt="Лефанов Алексей"/><br />
+        <a href="https://github.com/Lefan-ov">
+          <img src="https://github.com/Lefan-ov.png" width="85px;" style="border-radius: 50%;" alt="Лефанов Алексей"/><br />
           <p style="margin-bottom: 14px;"><sub><b>Лефанов Алексей</b></sub></p>
         </a>
         <img src="https://img.shields.io/badge/Role-Analyst-yellow" alt="Analyst" />
