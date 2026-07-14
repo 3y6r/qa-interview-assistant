@@ -50,3 +50,61 @@ http://127.0.0.1:8000/docs
 - Backend хранит только итог интервью, а не процесс прохождения.
 - SQLite используется по умолчанию через `DATABASE_URL=sqlite:///./app.db`.
 - Уровни создаются автоматически при старте backend.
+
+### Contributors
+
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.2%">
+        <a href="https://github.com/zubr1337">
+          <img src="https://github.com/zubr1337.png" width="85px;" style="border-radius: 50%;" alt="Федор Зуенко"/><br />
+          <p style="margin-bottom: 14px;"><sub><b>Федор Зуенко</b></sub></p>
+        </a>
+        <img src="https://img.shields.io/badge/Role-Project%20Manager-red" alt="Project Manager" />
+      </td>
+      <td align="center" valign="top" width="14.2%">
+        <a href="https://github.com/LI0nelpeps1">
+          <img src="https://github.com/LI0nelpeps1.png" width="85px;" style="border-radius: 50%;" alt="Романов Владимир"/><br />
+          <p style="margin-bottom: 14px;"><sub><b>Романов Владимир</b></sub></p>
+        </a>
+        <img src="https://img.shields.io/badge/Role-Frontend%20Developer-00bcff" alt="Frontend Developer" />
+      </td>
+      <td align="center" valign="top" width="14.2%">
+        <a href="https://github.com/ivanvishnevskii">
+          <img src="https://github.com/ivanvishnevskii.png" width="85px;" style="border-radius: 50%;" alt="Иван Вишневский"/><br />
+          <p style="margin-bottom: 14px;"><sub><b>Иван Вишневский</b></sub></p>
+        </a>
+        <img src="https://img.shields.io/badge/Role-Backend%20Developer-green" alt="Backend Developer" />
+      </td>
+      <td align="center" valign="top" width="14.2%">
+        <a href="https://github.com/Sugi-GRW">
+          <img src="https://github.com/Sugi-GRW.png" width="85px;" style="border-radius: 50%;" alt="Ефимов Аркадий"/><br />
+          <p style="margin-bottom: 14px;"><sub><b>Ефимов Аркадий</b></sub></p>
+        </a>
+        <img src="https://img.shields.io/badge/Role-QA%2FAI%20Engineer-4A148C" alt="QA/AI Engineer" />
+      </td>
+      <td align="center" valign="top" width="14.2%">
+        <a href="https://github.com/choppaofme-boop">
+          <img src="https://github.com/choppaofme-boop.png" width="85px;" style="border-radius: 50%;" alt="Максим Карятников"/><br />
+          <p style="margin-bottom: 14px;"><sub><b>Максим Карятников</b></sub></p>
+        </a>
+        <img src="https://img.shields.io/badge/Role-DevOps-2496ed" alt="DevOps" />
+      </td>
+      <td align="center" valign="top" width="14.2%">
+        <a href="https://github.com/Lefan-ov">
+          <img src="https://github.com/Lefan-ov.png" width="85px;" style="border-radius: 50%;" alt="Лефанов Алексей"/><br />
+          <p style="margin-bottom: 14px;"><sub><b>Лефанов Алексей</b></sub></p>
+        </a>
+        <img src="https://img.shields.io/badge/Role-Analyst-yellow" alt="Analyst" />
+      </td>
+      <td align="center" valign="top" width="14.8%">
+        <a href="https://github.com/Makyan228">
+          <img src="https://github.com/Makyan228.png" width="85px;" style="border-radius: 50%;" alt="Сосульников Кирилл"/><br />
+          <p style="margin-bottom: 14px;"><sub><b>Сосульников Кирилл</b></sub></p>
+        </a>
+        <img src="https://img.shields.io/badge/Role-QA%20Tester-orange" alt="QA Tester" />
+      </td>
+    </tr>
+  </tbody>
+</table>
