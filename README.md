@@ -91,21 +91,21 @@ http://127.0.0.1:8000/docs
         </a>
         <img src="https://img.shields.io/badge/Role-QA%2FAI%20Engineer-4A148C" alt="QA/AI Engineer" />
       </td>
-      <!-- 5. Лефанов Алексей (Analyst) -->
+       <!-- 5. Максим Карятников (DevOps) -->
+      <td align="center" valign="top" width="14.2%">
+        <a href="https://github.com/choppaofme-boop">
+          <img src="https://github.com/choppaofme-boop.png" width="85px;" style="border-radius: 50%;" alt="Максим Карятников"/><br />
+          <p style="margin-bottom: 14px;"><sub><b>Максим Карятников</b></sub></p>
+        </a>
+        <img src="https://img.shields.io/badge/Role-DevOps-2496ed" alt="DevOps" />
+      </td>
+      <!-- 6. Лефанов Алексей (Analyst) -->
       <td align="center" valign="top" width="14.2%">
         <a href="https://github.com/reynamane">
           <img src="https://github.com/reynamane.png" width="85px;" style="border-radius: 50%;" alt="Лефанов Алексей"/><br />
           <p style="margin-bottom: 14px;"><sub><b>Лефанов Алексей</b></sub></p>
         </a>
         <img src="https://img.shields.io/badge/Role-Analyst-yellow" alt="Analyst" />
-      </td>
-      <!-- 6. Максим Карятников (DevOps) -->
-      <td align="center" valign="top" width="14.2%">
-        <a href="https://github.com/Choppaofme">
-          <img src="https://github.com/Choppaofme.png" width="85px;" style="border-radius: 50%;" alt="Максим Карятников"/><br />
-          <p style="margin-bottom: 14px;"><sub><b>Максим Карятников</b></sub></p>
-        </a>
-        <img src="https://img.shields.io/badge/Role-DevOps-2496ed" alt="DevOps" />
       </td>
       <!-- 7. Сосульников Кирилл (QA Tester) -->
       <td align="center" valign="top" width="14.2%">
