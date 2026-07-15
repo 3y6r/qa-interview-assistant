@@ -115,3 +115,19 @@ http://127.0.0.1:8000/docs
     </tr>
   </tbody>
 </table>
+
+
+### Contributors✨
+
+* <a href="https://github.com/zubr1337"><img src="https://github.com/zubr1337.png" width="24px" style="border-radius:50%;" /></a> **Федор Зуенко** — ![Project Manager](https://img.shields.io/badge/Role-Project%20Manager-red)
+* <a href="https://github.com/LI0nelpeps1"><img src="https://github.com/LI0nelpeps1.png" width="24px" style="border-radius:50%;" /></a> **Романов Владимир** — ![Frontend Developer](https://img.shields.io/badge/Role-Frontend%20Developer-00bcff)
+* <a href="https://github.com/ivanvishnevskii"><img src="https://github.com/ivanvishnevskii.png" width="24px" style="border-radius:50%;" /></a> **Иван Вишневский** — ![Backend Developer](https://img.shields.io/badge/Role-Backend%20Developer-green)
+* <a href="https://github.com/Sugi-GRW"><img src="https://github.com/Sugi-GRW.png" width="24px" style="border-radius:50%;" /></a> **Ефимов Аркадий** — ![QA/AI Engineer](https://img.shields.io/badge/Role-QA%2FAI%20Engineer-4A148C)
+* <a href="https://github.com/choppaofme-boop"><img src="https://github.com/choppaofme-boop.png" width="24px" style="border-radius:50%;" /></a> **Максим Карятников** — ![DevOps](https://img.shields.io/badge/Role-DevOps-2496ed)
+* <a href="https://github.com/Lefan-ov"><img src="https://github.com/Lefan-ov.png" width="85px;" style="border-radius: 50%;" alt="Лефанов Алексей"/><br />
+          <p style="margin-bottom: 14px;"><sub><b>Лефанов Алексей</b></sub></p>
+        </a>
+        <img src="https://img.shields.io/badge/Role-Analyst-yellow" alt="Analyst" />
+      </td>
+* <a href="https://github.com/Lefan-ov"><img src="https://github.com/Lefan-ov.png" width="24px" style="border-radius:50%;" /></a> **Лефанов Алексей** — ![Analyst](https://img.shields.io/badge/Role-Analyst-yellow)
+* <a href="https://github.com/Makyan228"><img src="https://github.com/Makyan228.png" width="24px" style="border-radius:50%;" /></a> **Сосульников Кирилл** — ![QA Tester](https://img.shields.io/badge/Role-QA%20Tester-orange)
