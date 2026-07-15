@@ -57,78 +57,61 @@ http://127.0.0.1:8000/docs
   <tbody>
     <tr>
       <!-- 1. Федор Зуенко (Project Manager) -->
-      <td align="center" valign="top" width="12.2%">
+      <td align="center" valign="top" width="14.2%" style="min-width: 100px;">
         <a href="https://github.com/zubr1337">
           <img src="https://github.com/zubr1337.png" width="85px;" style="border-radius: 50%;" alt="Федор Зуенко"/><br />
-          <div style="min-height: 40px; display: flex; align-items: center; justify-content: center;">
-            <sub><b>Федор Зуенко</b></sub>
-          </div>
+          <div style="margin-bottom: 12px; white-space: nowrap;"><sub><b>Федор Зуенко</b></sub></div>
         </a>
         <img src="https://img.shields.io/badge/Role-Project%20Manager-red" alt="Project Manager" />
       </td>
       <!-- 2. Романов Владимир (Frontend Developer) -->
-      <td align="center" valign="top" width="14.2%">
+      <td align="center" valign="top" width="14.2%" style="min-width: 100px;">
         <a href="https://github.com/LI0nelpeps1">
           <img src="https://github.com/LI0nelpeps1.png" width="85px;" style="border-radius: 50%;" alt="Романов Владимир"/><br />
-          <div style="min-height: 40px; display: flex; align-items: center; justify-content: center;">
-            <sub><b>Романов Владимир</b></sub>
-          </div>
+          <div style="margin-bottom: 12px; white-space: nowrap;"><sub><b>Романов Владимир</b></sub></div>
         </a>
         <img src="https://img.shields.io/badge/Role-Frontend%20Developer-00bcff" alt="Frontend Developer" />
       </td>
       <!-- 3. Иван Вишневский (Backend Developer) -->
-      <td align="center" valign="top" width="14.2%">
+      <td align="center" valign="top" width="14.2%" style="min-width: 100px;">
         <a href="https://github.com/ivanvishnevskii">
           <img src="https://github.com/ivanvishnevskii.png" width="85px;" style="border-radius: 50%;" alt="Иван Вишневский"/><br />
-          <div style="min-height: 40px; display: flex; align-items: center; justify-content: center;">
-            <sub><b>Иван Вишневский</b></sub>
-          </div>
+          <div style="margin-bottom: 12px; white-space: nowrap;"><sub><b>Иван Вишневский</b></sub></div>
         </a>
         <img src="https://img.shields.io/badge/Role-Backend%20Developer-green" alt="Backend Developer" />
       </td>
       <!-- 4. Ефимов Аркадий (QA/AI Engineer) -->
-      <td align="center" valign="top" width="14.2%">
+      <td align="center" valign="top" width="14.2%" style="min-width: 100px;">
         <a href="https://github.com/Sugi-GRW">
           <img src="https://github.com/Sugi-GRW.png" width="85px;" style="border-radius: 50%;" alt="Ефимов Аркадий"/><br />
-          <div style="min-height: 40px; display: flex; align-items: center; justify-content: center;">
-            <sub><b>Ефимов Аркадий</b></sub>
-          </div>
+          <div style="margin-bottom: 12px; white-space: nowrap;"><sub><b>Ефимов Аркадий</b></sub></div>
         </a>
         <img src="https://img.shields.io/badge/Role-QA%2FAI%20Engineer-4A148C" alt="QA/AI Engineer" />
       </td>
       <!-- 5. Максим Карятников (DevOps) -->
-      <td align="center" valign="top" width="14.2%">
+      <td align="center" valign="top" width="14.2%" style="min-width: 100px;">
         <a href="https://github.com/choppaofme-boop">
           <img src="https://github.com/choppaofme-boop.png" width="85px;" style="border-radius: 50%;" alt="Максим Карятников"/><br />
-          <div style="min-height: 40px; display: flex; align-items: center; justify-content: center;">
-            <sub><b>Максим Карятников</b></sub>
-          </div>
+          <div style="margin-bottom: 12px; white-space: nowrap;"><sub><b>Максим Карятников</b></sub></div>
         </a>
         <img src="https://img.shields.io/badge/Role-DevOps-2496ed" alt="DevOps" />
       </td>
       <!-- 6. Лефанов Алексей (Analyst) -->
-      <td align="center" valign="top" width="14.2%">
+      <td align="center" valign="top" width="14.2%" style="min-width: 100px;">
         <a href="https://github.com/Lefan-ov">
           <img src="https://github.com/Lefan-ov.png" width="85px;" style="border-radius: 50%;" alt="Лефанов Алексей"/><br />
-          <div style="min-height: 40px; display: flex; align-items: center; justify-content: center;">
-            <sub><b>Лефанов Алексей</b></sub>
-          </div>
+          <div style="margin-bottom: 12px; white-space: nowrap;"><sub><b>Лефанов Алексей</b></sub></div>
         </a>
         <img src="https://img.shields.io/badge/Role-Analyst-yellow" alt="Analyst" />
       </td>
       <!-- 7. Сосульников Кирилл (QA Tester) -->
-      <td align="center" valign="top" width="14.8%">
+      <td align="center" valign="top" width="14.8%" style="min-width: 100px;">
         <a href="https://github.com/Makyan228">
           <img src="https://github.com/Makyan228.png" width="85px;" style="border-radius: 50%;" alt="Сосульников Кирилл"/><br />
-          <div style="min-height: 40px; display: flex; align-items: center; justify-content: center;">
-            <sub><b>Сосульников Кирилл</b></sub>
-          </div>
+          <div style="margin-bottom: 12px; white-space: nowrap;"><sub><b>Сосульников Кирилл</b></sub></div>
         </a>
         <img src="https://img.shields.io/badge/Role-QA%20Tester-orange" alt="QA Tester" />
       </td>
     </tr>
   </tbody>
 </table>
-
-
-
