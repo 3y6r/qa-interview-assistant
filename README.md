@@ -88,9 +88,7 @@ http://127.0.0.1:8000/docs
         </a>
         <img src="https://img.shields.io/badge/Role-QA%2FAI%20Engineer-4A148C" alt="QA/AI Engineer" />
       </td>
-    </tr>
-    <tr>
-      <!-- 5. Максим Карятников (DevOps) -->
+       <!-- 5. Максим Карятников (DevOps) -->
       <td align="center" valign="top" width="25%">
         <a href="https://github.com/choppaofme-boop">
           <img src="https://github.com/choppaofme-boop.png" width="85px;" style="border-radius: 50%;" alt="Максим Карятников"/><br />
@@ -98,6 +96,8 @@ http://127.0.0.1:8000/docs
         </a>
         <img src="https://img.shields.io/badge/Role-DevOps-2496ed" alt="DevOps" />
       </td>
+    </tr>
+    <tr>
       <!-- 6. Лефанов Алексей (Analyst) -->
       <td align="center" valign="top" width="25%">
         <a href="https://github.com/Lefan-ov">
