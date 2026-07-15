@@ -114,8 +114,6 @@ http://127.0.0.1:8000/docs
         </a>
         <img src="https://img.shields.io/badge/Role-QA%20Tester-orange" alt="QA Tester" />
       </td>
-      <!-- Пустая ячейка шириной 25% для идеального баланса нижней строки -->
-      <td align="center" valign="top" width="25%"></td>
     </tr>
   </tbody>
 </table>
