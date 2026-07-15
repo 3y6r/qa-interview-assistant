@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Table, Tag, Typography, Modal, Descriptions, Button, Popconfirm, Tooltip, message } from 'antd';
+import { Card, Table, Tag, Typography, Modal, Descriptions, Button, Statistic, Popconfirm, Tooltip, message } from 'antd';
 import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ColumnsType } from 'antd/es/table';
@@ -162,6 +162,7 @@ export function HistoryPage() {
 
             {selectedResult.comment && (
               <>
+                <Statistic title="Средний балл" value={selectedResult.averageScore.toFixed(1)} suffix="/ 10" className={styles.detailStats} />
                 <Typography.Text strong className={styles.questionsHeader}>Комментарий</Typography.Text>
                 <Typography.Paragraph style={{ whiteSpace: 'pre-wrap' }}>{selectedResult.comment}</Typography.Paragraph>
               </>
