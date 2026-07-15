@@ -57,7 +57,7 @@ http://127.0.0.1:8000/docs
   <tbody>
     <tr>
       <!-- 1. Федор Зуенко (Project Manager) -->
-      <td align="center" valign="top" width="14.2%">
+      <td align="center" valign="top" width="25%">
         <a href="https://github.com/zubr1337">
           <img src="https://github.com/zubr1337.png" width="85px;" style="border-radius: 50%;" alt="Федор Зуенко"/><br />
           <p style="margin-bottom: 14px;"><sub><b>Федор Зуенко</b></sub></p>
@@ -65,7 +65,7 @@ http://127.0.0.1:8000/docs
         <img src="https://img.shields.io/badge/Role-Project%20Manager-red" alt="Project Manager" />
       </td>
       <!-- 2. Романов Владимир (Frontend Developer) -->
-      <td align="center" valign="top" width="14.2%">
+      <td align="center" valign="top" width="25%">
         <a href="https://github.com/LI0nelpeps1">
           <img src="https://github.com/LI0nelpeps1.png" width="85px;" style="border-radius: 50%;" alt="Романов Владимир"/><br />
           <p style="margin-bottom: 14px;"><sub><b>Романов Владимир</b></sub></p>
@@ -73,7 +73,7 @@ http://127.0.0.1:8000/docs
         <img src="https://img.shields.io/badge/Role-Frontend%20Developer-00bcff" alt="Frontend Developer" />
       </td>
       <!-- 3. Иван Вишневский (Backend Developer) -->
-      <td align="center" valign="top" width="14.2%">
+      <td align="center" valign="top" width="25%">
         <a href="https://github.com/ivanvishnevskii">
           <img src="https://github.com/ivanvishnevskii.png" width="85px;" style="border-radius: 50%;" alt="Иван Вишневский"/><br />
           <p style="margin-bottom: 14px;"><sub><b>Иван Вишневский</b></sub></p>
@@ -81,15 +81,17 @@ http://127.0.0.1:8000/docs
         <img src="https://img.shields.io/badge/Role-Backend%20Developer-green" alt="Backend Developer" />
       </td>
       <!-- 4. Ефимов Аркадий (QA/AI Engineer) -->
-      <td align="center" valign="top" width="14.2%">
+      <td align="center" valign="top" width="25%">
         <a href="https://github.com/Sugi-GRW">
           <img src="https://github.com/Sugi-GRW.png" width="85px;" style="border-radius: 50%;" alt="Ефимов Аркадий"/><br />
           <p style="margin-bottom: 14px;"><sub><b>Ефимов Аркадий</b></sub></p>
         </a>
         <img src="https://img.shields.io/badge/Role-QA%2FAI%20Engineer-4A148C" alt="QA/AI Engineer" />
       </td>
-       <!-- 5. Максим Карятников (DevOps) -->
-      <td align="center" valign="top" width="14.2%">
+    </tr>
+    <tr>
+      <!-- 5. Максим Карятников (DevOps) -->
+      <td align="center" valign="top" width="25%">
         <a href="https://github.com/choppaofme-boop">
           <img src="https://github.com/choppaofme-boop.png" width="85px;" style="border-radius: 50%;" alt="Максим Карятников"/><br />
           <p style="margin-bottom: 14px;"><sub><b>Максим Карятников</b></sub></p>
@@ -97,7 +99,7 @@ http://127.0.0.1:8000/docs
         <img src="https://img.shields.io/badge/Role-DevOps-2496ed" alt="DevOps" />
       </td>
       <!-- 6. Лефанов Алексей (Analyst) -->
-      <td align="center" valign="top" width="14.2%">
+      <td align="center" valign="top" width="25%">
         <a href="https://github.com/Lefan-ov">
           <img src="https://github.com/Lefan-ov.png" width="85px;" style="border-radius: 50%;" alt="Лефанов Алексей"/><br />
           <p style="margin-bottom: 14px;"><sub><b>Лефанов Алексей</b></sub></p>
@@ -105,29 +107,17 @@ http://127.0.0.1:8000/docs
         <img src="https://img.shields.io/badge/Role-Analyst-yellow" alt="Analyst" />
       </td>
       <!-- 7. Сосульников Кирилл (QA Tester) -->
-      <td align="center" valign="top" width="14.8%">
+      <td align="center" valign="top" width="25%">
         <a href="https://github.com/Makyan228">
           <img src="https://github.com/Makyan228.png" width="85px;" style="border-radius: 50%;" alt="Сосульников Кирилл"/><br />
           <p style="margin-bottom: 14px;"><sub><b>Сосульников Кирилл</b></sub></p>
         </a>
         <img src="https://img.shields.io/badge/Role-QA%20Tester-orange" alt="QA Tester" />
       </td>
+      <!-- Пустая ячейка шириной 25% для идеального баланса нижней строки -->
+      <td align="center" valign="top" width="25%"></td>
     </tr>
   </tbody>
 </table>
 
 
-### Contributors✨
-
-* <a href="https://github.com/zubr1337"><img src="https://github.com/zubr1337.png" width="24px" style="border-radius:50%;" /></a> **Федор Зуенко** — ![Project Manager](https://img.shields.io/badge/Role-Project%20Manager-red)
-* <a href="https://github.com/LI0nelpeps1"><img src="https://github.com/LI0nelpeps1.png" width="24px" style="border-radius:50%;" /></a> **Романов Владимир** — ![Frontend Developer](https://img.shields.io/badge/Role-Frontend%20Developer-00bcff)
-* <a href="https://github.com/ivanvishnevskii"><img src="https://github.com/ivanvishnevskii.png" width="24px" style="border-radius:50%;" /></a> **Иван Вишневский** — ![Backend Developer](https://img.shields.io/badge/Role-Backend%20Developer-green)
-* <a href="https://github.com/Sugi-GRW"><img src="https://github.com/Sugi-GRW.png" width="24px" style="border-radius:50%;" /></a> **Ефимов Аркадий** — ![QA/AI Engineer](https://img.shields.io/badge/Role-QA%2FAI%20Engineer-4A148C)
-* <a href="https://github.com/choppaofme-boop"><img src="https://github.com/choppaofme-boop.png" width="24px" style="border-radius:50%;" /></a> **Максим Карятников** — ![DevOps](https://img.shields.io/badge/Role-DevOps-2496ed)
-* <a href="https://github.com/Lefan-ov"><img src="https://github.com/Lefan-ov.png" width="85px;" style="border-radius: 50%;" alt="Лефанов Алексей"/><br />
-          <p style="margin-bottom: 14px;"><sub><b>Лефанов Алексей</b></sub></p>
-        </a>
-        <img src="https://img.shields.io/badge/Role-Analyst-yellow" alt="Analyst" />
-      </td>
-* <a href="https://github.com/Lefan-ov"><img src="https://github.com/Lefan-ov.png" width="24px" style="border-radius:50%;" /></a> **Лефанов Алексей** — ![Analyst](https://img.shields.io/badge/Role-Analyst-yellow)
-* <a href="https://github.com/Makyan228"><img src="https://github.com/Makyan228.png" width="24px" style="border-radius:50%;" /></a> **Сосульников Кирилл** — ![QA Tester](https://img.shields.io/badge/Role-QA%20Tester-orange)
