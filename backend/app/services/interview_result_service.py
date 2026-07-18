@@ -39,13 +39,11 @@ class InterviewResultService:
     def create_result(self, payload: InterviewResultCreate) -> InterviewResult:
         candidate_full_name = payload.candidate_full_name.strip()
         position = payload.position.strip()
-        comment = payload.comment.strip()
+        comment = payload.comment.strip() if payload.comment else ""
         if not candidate_full_name:
             raise ValidationError("Candidate full name cannot be empty")
         if not position:
             raise ValidationError("Position cannot be empty")
-        if not comment:
-            raise ValidationError("Comment cannot be empty")
         return self.repo.create(
             InterviewResult(
                 candidate_full_name=candidate_full_name,

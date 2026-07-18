@@ -72,17 +72,6 @@ def test_create_result_rejects_empty_fields(monkeypatch):
             )
         )
 
-    with pytest.raises(ValidationError, match="Comment cannot be empty"):
-        service.create_result(
-            SimpleNamespace(
-                candidate_full_name="Ivan Ivanov",
-                position="Backend Developer",
-                interview_date=date(2026, 1, 1),
-                average_score=7.5,
-                comment="   ",
-            )
-        )
-
 
 def test_get_result_missing_raises_not_found(monkeypatch):
     repo = DummyRepo(get_result=None)

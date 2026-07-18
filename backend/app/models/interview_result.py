@@ -16,7 +16,7 @@ class InterviewResult(Base):
     position: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     interview_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     average_score: Mapped[float] = mapped_column(Float, nullable=False)
-    comment: Mapped[str] = mapped_column(Text, nullable=False)
+    comment: Mapped[str] = mapped_column(Text, nullable=True, default="")
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.now()
     )
