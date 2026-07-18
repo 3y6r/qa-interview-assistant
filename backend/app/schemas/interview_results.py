@@ -8,7 +8,7 @@ class InterviewResultCreate(BaseModel):
     position: str = Field(min_length=1, max_length=255)
     interview_date: date
     average_score: float
-    comment: str = Field(min_length=1)
+    comment: str = Field(default="")
 
 
 class InterviewResultRead(BaseModel):
