@@ -199,7 +199,12 @@ export function QuestionList() {
             allowClear
             popupMatchSelectWidth={false}
             className={styles.filterSelect}
-            options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
+            options={(() => {
+              const categoryIdsWithQuestions = new Set(questions.map((q: any) => q.categoryId));
+              return categories
+                .filter((c: any) => !c.isArchived || categoryIdsWithQuestions.has(c.id))
+                .map((c: any) => ({ value: c.id, label: c.name }));
+            })()}
           />
           <Select
             placeholder="Уровень"
