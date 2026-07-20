@@ -314,7 +314,7 @@ export function QuestionList() {
           ) : (
             <List
               loading={isLoading}
-              dataSource={sortedQuestions}
+              dataSource={questions}
               renderItem={(q: Question) => {
                 const isSelected = selectedIds.has(q.id);
                 const cat = categories.find((c: any) => c.id === q.categoryId);
