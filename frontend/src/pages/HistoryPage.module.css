@@ -1,0 +1,20 @@
+.title {
+  margin-top: 0;
+}
+.filterCard {
+  margin-bottom: 16px;
+}
+.detailDescriptions {
+  margin-bottom: 16px;
+}
+.detailGradeTag {
+  font-size: 14px;
+  padding: 2px 10px;
+}
+.questionsHeader {
+  display: block;
+  margin-bottom: 8px;
+}
+.centeredHeader {
+  text-align: center !important;
+}

@@ -1,0 +1,25 @@
+.layout {
+  height: 100vh;
+  overflow: hidden;
+}
+.header {
+  background: #001529;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.logo.logo {
+  color: #fff;
+  margin: 0;
+  white-space: nowrap;
+}
+.menu {
+  flex: 1;
+  min-width: 0;
+}
+.content {
+  margin: 24px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}

@@ -1,0 +1,37 @@
+.workspace {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  height: calc(100vh - 112px);
+  overflow: hidden;
+}
+.leftColumn {
+  flex: 0 0 450px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.actionButton {
+  flex: 1;
+}
+.rightColumn {
+  flex: 1;
+  height: 100%;
+  overflow: auto;
+}
+.resultStats {
+  margin-bottom: 24px;
+}
+.gradeTag {
+  font-size: 16px;
+  padding: 4px 12px;
+}
+.resultDescription {
+  margin-bottom: 16px;
+}
