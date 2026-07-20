@@ -42,9 +42,18 @@ export function QuestionList() {
     hasNextPage,
     fetchNextPage,
   } = useInfiniteQuery({
-    queryKey: ['questions', text, categoryId, levelId, tagIds, showArchived],
+    queryKey: ['questions', text, categoryId, levelId, tagIds, showArchived, sortBy],
     queryFn: ({ pageParam = 0 }) =>
-      questionsApi.list({ text: text || undefined, categoryId, levelId, tagIds, isArchived: showArchived, limit: LIMIT, offset: pageParam }),
+      questionsApi.list({
+        text: text || undefined,
+        categoryId,
+        levelId,
+        tagIds,
+        isArchived: showArchived,
+        sortOrder: sortBy,
+        limit: LIMIT,
+        offset: pageParam,
+      }),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length < LIMIT ? undefined : allPages.length * LIMIT;
@@ -52,12 +61,6 @@ export function QuestionList() {
   });
 
   const questions = questionsPages?.pages.flat() ?? [];
-
-  const sortedQuestions = [...questions].sort((a, b) => {
-    const da = new Date(a.createdAt).getTime();
-    const db = new Date(b.createdAt).getTime();
-    return sortBy === 'newest' ? db - da : da - db;
-  });
 
   const selectedIds = new Set(selectedQuestions.map(q => q.id));
 

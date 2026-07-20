@@ -1,0 +1,8 @@
+[Unit]
+Description=QA Interview Assistant: cleanup unused archived categories
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/qa-category-cleanup.sh

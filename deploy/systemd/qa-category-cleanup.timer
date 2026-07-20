@@ -1,0 +1,13 @@
+[Unit]
+Description=QA Interview Assistant: run category cleanup every 30 days
+
+[Timer]
+OnActiveSec=30d
+OnUnitActiveSec=30d
+Persistent=true
+AccuracySec=1h
+RandomizedDelaySec=10m
+Unit=qa-category-cleanup.service
+
+[Install]
+WantedBy=timers.target

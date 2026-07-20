@@ -45,6 +45,18 @@ Backend Swagger UI:
 http://127.0.0.1:8000/docs
 ```
 
+## Docker и PostgreSQL
+
+Локальный Docker-запуск:
+
+```bash
+cp .env.example .env
+docker compose --env-file .env up --build -d
+```
+
+Production-запуск выполняется через `docker-compose.prod.yml`. Подробная инструкция находится в
+[`DEPLOYMENT_AND_DOCKER_GUIDE_GITHUB.md`](DEPLOYMENT_AND_DOCKER_GUIDE_GITHUB.md).
+
 ## Примечания
 
 - Backend хранит только итог интервью, а не процесс прохождения.

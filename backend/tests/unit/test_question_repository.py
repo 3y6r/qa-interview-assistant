@@ -124,3 +124,27 @@ def test_create_question_rejects_missing_tags(tmp_path):
     finally:
         session.close()
         engine.dispose()
+
+
+def test_list_questions_sorts_before_limit_and_offset(tmp_path):
+    session, engine = make_session(tmp_path)
+    try:
+        category, level, _, _ = seed_common_entities(session)
+        repo = QuestionRepository(session)
+
+        created = [
+            repo.create(make_question(f"Question {index}", category.id, level.id))
+            for index in range(5)
+        ]
+        created_ids = [question.id for question in created]
+
+        newest_first_page = repo.list(sort_order="newest", limit=2, offset=0)
+        newest_second_page = repo.list(sort_order="newest", limit=2, offset=2)
+        oldest_first_page = repo.list(sort_order="oldest", limit=2, offset=0)
+
+        assert [item.id for item in newest_first_page] == list(reversed(created_ids))[:2]
+        assert [item.id for item in newest_second_page] == list(reversed(created_ids))[2:4]
+        assert [item.id for item in oldest_first_page] == created_ids[:2]
+    finally:
+        session.close()
+        engine.dispose()

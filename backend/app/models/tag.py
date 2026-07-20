@@ -15,7 +15,7 @@ class Tag(Base):
         String(255), unique=True, nullable=False, index=True
     )
     is_archived: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False, server_default=sa_text("0")
+        Boolean, nullable=False, default=False, server_default=sa_text("false")
     )
     color: Mapped[str] = mapped_column(
         String(7),

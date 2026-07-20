@@ -14,7 +14,7 @@ class Category(Base):
         String(255), unique=True, nullable=False, index=True
     )
     is_archived: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False, server_default=text("0")
+        Boolean, nullable=False, default=False, server_default=text("false")
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.now()
