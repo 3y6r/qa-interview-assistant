@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Question, Candidate } from '../types';
+import { encrypt, decrypt } from '../utils/crypto';
 
 function generateId(): string {
   return crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -8,6 +9,12 @@ function generateId(): string {
 interface QuestionScore {
   questionId: number;
   score: number;
+}
+
+interface SessionData {
+  candidate: Candidate | null;
+  selectedQuestions: Question[];
+  scores: Record<number, QuestionScore>;
 }
 
 interface EditorState {
@@ -83,27 +90,44 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   saveSession: () => {
     const { sessionToken, candidate, selectedQuestions, scores } = get();
+    const data: SessionData = { candidate, selectedQuestions, scores };
     try {
       sessionStorage.setItem(ACTIVE_TOKEN_KEY, sessionToken);
-      localStorage.setItem(
-        STORAGE_PREFIX + sessionToken,
-        JSON.stringify({ candidate, selectedQuestions, scores }),
-      );
+      encrypt(data, sessionToken).then((cipher) => {
+        localStorage.setItem(STORAGE_PREFIX + sessionToken, cipher);
+      });
     } catch {}
   },
 
-  restoreSession: (token: string) => {
+  restoreSession: async (token: string) => {
+    const empty: SessionData = { candidate: null, selectedQuestions: [], scores: {} };
     try {
       const raw = localStorage.getItem(STORAGE_PREFIX + token);
-      if (raw) {
-        const data = JSON.parse(raw);
-        set({ sessionToken: token, ...data });
+      if (!raw) {
+        set({ sessionToken: token, ...empty });
+        sessionStorage.setItem(ACTIVE_TOKEN_KEY, token);
+        return;
+      }
+
+      const decrypted = await decrypt<SessionData>(raw, token);
+      if (decrypted) {
+        set({ sessionToken: token, ...decrypted });
       } else {
-        set({ sessionToken: token, candidate: null, selectedQuestions: [], scores: {} });
+        // Legacy unencrypted data — parse as JSON and re-save encrypted
+        try {
+          const legacy = JSON.parse(raw) as SessionData;
+          set({ sessionToken: token, ...legacy });
+          // Re-save encrypted
+          encrypt(legacy, token).then((cipher) => {
+            localStorage.setItem(STORAGE_PREFIX + token, cipher);
+          });
+        } catch {
+          set({ sessionToken: token, ...empty });
+        }
       }
       sessionStorage.setItem(ACTIVE_TOKEN_KEY, token);
     } catch {
-      set({ sessionToken: token, candidate: null, selectedQuestions: [], scores: {} });
+      set({ sessionToken: token, ...empty });
       sessionStorage.setItem(ACTIVE_TOKEN_KEY, token);
     }
   },

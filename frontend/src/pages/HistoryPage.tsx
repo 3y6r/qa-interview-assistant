@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Table, Tag, Typography, Modal, Descriptions, Button, Statistic, Row, Col, Popconfirm, Tooltip, message } from 'antd';
+import { Card, Table, Tag, Typography, Modal, Descriptions, Button, Popconfirm, Tooltip, message } from 'antd';
 import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ColumnsType } from 'antd/es/table';
@@ -137,7 +137,7 @@ export function HistoryPage() {
       />
 
       <Modal
-        title={`Результат: ${selectedResult?.candidateFullName ?? ''}`}
+        title={`Кандидат: ${selectedResult?.candidateFullName ?? ''}`}
         open={!!selectedResult}
         onCancel={() => setSelectedResult(null)}
         footer={[
@@ -149,27 +149,17 @@ export function HistoryPage() {
         {selectedResult && (
           <>
             <Descriptions size="small" column={2} className={styles.detailDescriptions}>
-              <Descriptions.Item label="Кандидат">{selectedResult.candidateFullName}</Descriptions.Item>
               <Descriptions.Item label="Должность">{selectedResult.position}</Descriptions.Item>
-              <Descriptions.Item label="Дата интервью">{selectedResult.interviewDate}</Descriptions.Item>
-            </Descriptions>
-
-            <Row gutter={16} className={styles.detailStats}>
-              <Col span={12}>
-                <Statistic title="Средний балл" value={selectedResult.averageScore.toFixed(1)} suffix="/ 10" />
-              </Col>
-              <Col span={12}>
-                <Statistic title="Оценка" valueRender={() => {
+              <Descriptions.Item label="Оценка">
+                {(() => {
                   const grade = getGrade(selectedResult.averageScore);
                   const g = GRADE_MAP[grade];
-                  return (
-                    <Tag color={g?.color || 'default'} className={styles.detailGradeTag}>
-                      {grade}
-                    </Tag>
-                  );
-                }} />
-              </Col>
-            </Row>
+                  return <Tag color={g?.color || 'default'} className={styles.detailGradeTag}>{grade}</Tag>;
+                })()}
+              </Descriptions.Item>
+              <Descriptions.Item label="Дата интервью">{selectedResult.interviewDate}</Descriptions.Item>
+              <Descriptions.Item label="Средний балл">{selectedResult.averageScore.toFixed(1)} / 10</Descriptions.Item>
+            </Descriptions>
 
             {selectedResult.comment && (
               <>

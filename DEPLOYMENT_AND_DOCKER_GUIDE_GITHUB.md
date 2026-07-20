@@ -252,7 +252,7 @@ POSTGRES_PASSWORD=<СЛОЖНЫЙ_ПАРОЛЬ>
 FRONTEND_PORT=8080
 
 GEMINI_API_KEY=<GEMINI_API_KEY>
-GEMINI_MODEL=gemini-3.1-flash-lite
+GEMINI_MODEL=gemini-3.5-flash
 GEMINI_TIMEOUT_SECONDS=60
 ```
 
@@ -1527,4 +1527,16 @@ healthcheck PostgreSQL и backend
 ротацию Docker-логов
 Gemini-генерацию вопросов
 автоматическую очистку неиспользуемых архивированных категорий
+```
+
+Для дальнейшего приближения к полноценному production рекомендуется отдельно реализовать:
+
+```text
+HTTPS
+авторизацию
+ограничение CORS
+rate limiting
+Alembic-миграции
+PostgreSQL integration tests в CI
+мониторинг и автоматические резервные копии
 ```

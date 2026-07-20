@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends
 from fastapi import Query
 from sqlalchemy.orm import Session
@@ -38,6 +40,7 @@ def list_questions(
     tag_ids: str | None = None,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    sort_order: Literal["newest", "oldest"] = Query(default="newest"),
     db: Session = Depends(get_db),
 ):
     return QuestionService(db).list_questions(
@@ -48,6 +51,7 @@ def list_questions(
         tag_ids=_parse_tag_ids(tag_ids),
         limit=limit,
         offset=offset,
+        sort_order=sort_order,
     )
 
 

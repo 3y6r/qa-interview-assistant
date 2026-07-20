@@ -236,12 +236,22 @@ def test_list_questions_passes_filters(monkeypatch):
 
     service = QuestionService(DummySession())
     items = service.list_questions(
-        text="api", category_id=1, level_id=2, is_archived=False
+        text="api",
+        category_id=1,
+        level_id=2,
+        is_archived=False,
+        sort_order="oldest",
     )
 
     assert len(items) == 1
     assert question_repo.list_calls == [
-        {"text": "api", "category_id": 1, "level_id": 2, "is_archived": False}
+        {
+            "text": "api",
+            "category_id": 1,
+            "level_id": 2,
+            "is_archived": False,
+            "sort_order": "oldest",
+        }
     ]
 
 

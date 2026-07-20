@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Card, Input, Select, Space, Button, List, Tag, Empty, message, Popconfirm, Tooltip, Dropdown } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined, InboxOutlined, DeleteOutlined, UnorderedListOutlined, ThunderboltOutlined, CheckOutlined, DownOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined, EditOutlined, InboxOutlined, DeleteOutlined, ThunderboltOutlined, CheckOutlined, DownOutlined, SortAscendingOutlined, SortDescendingOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { questionsApi } from '../../../api/questions';
 import { categoriesApi } from '../../../api/categories';
@@ -10,6 +10,7 @@ import { useEditorStore } from '../../../stores/editorStore';
 import { LEVELS_QUERY_KEY } from '../../../utils/constants';
 import { QuestionFormModal } from './QuestionFormModal';
 import { QuestionGenerateModal } from './QuestionGenerateModal';
+import { QuestionGeneratedResultModal } from './QuestionGeneratedResultModal';
 import type { Question } from '../../../types';
 import styles from './QuestionList.module.css';
 
@@ -23,6 +24,8 @@ export function QuestionList() {
   const [formModal, setFormModal] = useState<{ open: boolean; question: Question | null }>({ open: false, question: null });
   const [showArchived, setShowArchived] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
+  const [generatedResult, setGeneratedResult] = useState<{ questions: any[]; params: any } | null>(null);
 
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list });
   const { data: allTags = [] } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.list });
@@ -39,9 +42,18 @@ export function QuestionList() {
     hasNextPage,
     fetchNextPage,
   } = useInfiniteQuery({
-    queryKey: ['questions', text, categoryId, levelId, tagIds, showArchived],
+    queryKey: ['questions', text, categoryId, levelId, tagIds, showArchived, sortBy],
     queryFn: ({ pageParam = 0 }) =>
-      questionsApi.list({ text: text || undefined, categoryId, levelId, tagIds, isArchived: showArchived, limit: LIMIT, offset: pageParam }),
+      questionsApi.list({
+        text: text || undefined,
+        categoryId,
+        levelId,
+        tagIds,
+        isArchived: showArchived,
+        sortOrder: sortBy,
+        limit: LIMIT,
+        offset: pageParam,
+      }),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length < LIMIT ? undefined : allPages.length * LIMIT;
@@ -188,8 +200,14 @@ export function QuestionList() {
             value={categoryId}
             onChange={setCategoryId}
             allowClear
+            popupMatchSelectWidth={false}
             className={styles.filterSelect}
-            options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
+            options={(() => {
+              const categoryIdsWithQuestions = new Set(questions.map((q: any) => q.categoryId));
+              return categories
+                .filter((c: any) => !c.isArchived || categoryIdsWithQuestions.has(c.id))
+                .map((c: any) => ({ value: c.id, label: c.name }));
+            })()}
           />
           <Select
             placeholder="Уровень"
@@ -234,7 +252,15 @@ export function QuestionList() {
             )}
           >
             <div className={styles.customSelect}>
-              <div className={styles.tagsScrollContainer}>
+              <div
+                className={styles.tagsScrollContainer}
+                onWheel={(e) => {
+                  if (e.deltaY !== 0) {
+                    e.currentTarget.scrollLeft += e.deltaY;
+                    e.preventDefault();
+                  }
+                }}
+              >
                 {tagIds && tagIds.length > 0 ? (
                   tagIds.map((id) => {
                     const tag = allTags.find((t: any) => t.id === id);
@@ -266,10 +292,16 @@ export function QuestionList() {
           </Dropdown>
 
           <div style={{ flex: 1 }} />
-          <Button icon={<UnorderedListOutlined />} onClick={() => setShowArchived(v => !v)} type={showArchived ? 'primary' : 'default'}>
+          <Tooltip title={sortBy === 'newest' ? 'Сначала новые' : 'Сначала старые'}>
+            <Button
+              icon={sortBy === 'newest' ? <SortDescendingOutlined /> : <SortAscendingOutlined />}
+              onClick={() => setSortBy(prev => prev === 'newest' ? 'oldest' : 'newest')}
+            />
+          </Tooltip>
+          <Button icon={<InboxOutlined />} onClick={() => setShowArchived(v => !v)} type={showArchived ? 'primary' : 'default'}>
             Архив
           </Button>
-          <Button icon={<ThunderboltOutlined />} onClick={() => setGenerateOpen(true)}>
+          <Button icon={<ThunderboltOutlined />} onClick={() => setGenerateOpen(true)} className={styles.aiButton}>
             AI
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setFormModal({ open: true, question: null })}>
@@ -357,7 +389,17 @@ export function QuestionList() {
       <QuestionGenerateModal
         open={generateOpen}
         onClose={() => setGenerateOpen(false)}
+        onGenerated={(questions, params) => setGeneratedResult({ questions, params })}
       />
+      {generatedResult && (
+        <QuestionGeneratedResultModal
+          open={true}
+          questions={generatedResult.questions}
+          params={generatedResult.params}
+          onClose={() => setGeneratedResult(null)}
+          onSaved={() => setGeneratedResult(null)}
+        />
+      )}
     </>
   );
 }

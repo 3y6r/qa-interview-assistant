@@ -9,6 +9,7 @@ export interface QuestionFilters {
   tagIds?: number[];
   limit?: number;
   offset?: number;
+  sortOrder?: 'newest' | 'oldest';
 }
 
 export const questionsApi = {

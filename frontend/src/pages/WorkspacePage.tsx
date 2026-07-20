@@ -63,7 +63,7 @@ export function WorkspacePage() {
         position: candidate!.position,
         interviewDate: dayjs().format('YYYY-MM-DD'),
         averageScore: result.averageScore,
-        comment: generalComment.trim() || `Средний балл: ${result.averageScore.toFixed(1)}`,
+        comment: generalComment.trim() || '',
       });
     },
     onSuccess: () => {

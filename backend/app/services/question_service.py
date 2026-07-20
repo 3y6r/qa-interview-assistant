@@ -38,12 +38,14 @@ class QuestionService:
         tag_ids=None,
         limit=None,
         offset=None,
+        sort_order="newest",
     ):
         kwargs = dict(
             text=text,
             category_id=category_id,
             level_id=level_id,
             is_archived=is_archived,
+            sort_order=sort_order,
         )
         if tag_ids is not None:
             kwargs["tag_ids"] = tag_ids

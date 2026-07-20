@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
@@ -23,8 +25,9 @@ class QuestionRepository:
         tag_ids: list[int] | None = None,
         limit: int | None = None,
         offset: int | None = None,
+        sort_order: Literal["newest", "oldest"] = "newest",
     ) -> list[Question]:
-        query = select(Question).order_by(Question.id)
+        query = select(Question)
         if text:
             query = query.where(Question.text.ilike(f"%{text}%"))
         if category_id is not None:
@@ -44,6 +47,12 @@ class QuestionRepository:
                 )
             )
             query = query.where(Question.id.in_(tag_match_ids))
+
+        if sort_order == "newest":
+            query = query.order_by(Question.created_at.desc(), Question.id.desc())
+        else:
+            query = query.order_by(Question.created_at.asc(), Question.id.asc())
+
         if offset is not None:
             query = query.offset(offset)
         if limit is not None:

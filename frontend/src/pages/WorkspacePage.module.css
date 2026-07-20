@@ -3,12 +3,14 @@
   gap: 16px;
   align-items: flex-start;
   height: calc(100vh - 112px);
+  overflow: hidden;
 }
 .leftColumn {
   flex: 0 0 450px;
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: auto;
 }
 .actions {
   display: flex;

@@ -19,7 +19,7 @@
   flex-shrink: 0;
 }
 .filterSelect {
-  width: 130px;
+  width: 160px;
   flex-shrink: 0;
 }
 .filterLevel {
@@ -122,6 +122,16 @@
 }
 .emptyState {
   margin-top: 40px;
+}
+.aiButton {
+  color: #fff;
+  background-color: #722ed1;
+  border-color: #722ed1;
+}
+.aiButton:hover {
+  color: #fff;
+  background-color: #9254de;
+  border-color: #9254de;
 }
 .listItem {
   cursor: grab;
